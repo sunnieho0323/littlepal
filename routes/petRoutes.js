@@ -1,5 +1,5 @@
-const router = require('express').Router();
-const activityController = require('../controllers/petController');
+const express = require('express');
+const router = express.Router();
 
 // add your pet routes here
 
