@@ -3,12 +3,11 @@ const router = express.Router();
 
 // add your activity routes here
 
-// GET /api/activities?petId=...
-router.get('/', activityController.listByPet);
+const Controllers = require('../controllers/activityController');
 
 // POST /api/activities
-router.post('/', activityController.add);
+router.get('/', Controllers.listByPet);
+router.post('/', Controllers.add);
 
-// endpoints for activity routes
 
 module.exports = router;

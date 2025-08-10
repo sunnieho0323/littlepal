@@ -1,17 +1,15 @@
-// controllers/activityController.js
-// fake data
-const activities = [
-  { id: 'a1', petId: 'p1', action: 'feed', note: 'Fed in the morning', createdAt: '2025-08-10T10:00:00Z' }
-];
+const activityService = require('../services/activityService');
 
+// GET /api/activities?petId=xxx
 exports.listByPet = (req, res) => {
   const { petId } = req.query;
-  const filtered = petId ? activities.filter(a => a.petId === petId) : activities;
-  res.json({ status: 'success', data: filtered, message: '' });
+  const items = activityService.listByPet(petId);
+  res.json({ status: 'success', data: { items }, message: '' });
 };
 
+// POST /api/activities
 exports.add = (req, res) => {
-  const newActivity = { id: `a${Date.now()}`, ...req.body, createdAt: new Date().toISOString() };
-  activities.push(newActivity);
-  res.status(201).json({ status: 'success', data: newActivity, message: 'Activity added' });
+  const { userId, petId, action, note } = req.body || {};
+  const activity = activityService.add({ userId, petId, action, note });
+  res.status(201).json({ status: 'success', data: { activity }, message: 'Activity added' });
 };
