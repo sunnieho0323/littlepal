@@ -27,7 +27,7 @@ Copy the .env.example file and configure your own .env:
 cp .env.example .env
 ```
 Example:
-
+```bash
 PORT=3000
 MONGO_URL=mongodb://localhost:27017
 MONGO_DB=littlepal
@@ -37,7 +37,7 @@ SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
 OPENAI_API_KEY=your-openai-api-key
-
+```
 ### 4. Run the project
 ```bash
 npm run dev
