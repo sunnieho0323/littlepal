@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>LittlePal Your Monster Cat!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Materialize -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <!-- Icons -->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body class="littlepal-room">
+    <!-- Top Nav -->
+    <nav class="white z-depth-0">
+      <div class="nav-wrapper container">
+        <a href="/" class="brand-logo black-text" data-testid="brand">
+          <i class="material-icons">pets</i> LittlePal
+        </a>
+
+        <ul class="right">
+          <!-- User avatar / menu -->
+          <li>
+            <a
+              class="dropdown-trigger"
+              href="#!"
+              data-target="user-menu"
+              id="user-avatar"
+              data-testid="user-avatar"
+            >
+              <img class="circle avatar" id="avatar-img" alt="user" />
+              <span id="avatar-text" class="black-text"></span>
+              <i class="material-icons right">arrow_drop_down</i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Dropdown content -->
+    <ul id="user-menu" class="dropdown-content">
+      <li><a id="menu-profile" href="#!" class="black-text">Profile</a></li>
+      <li class="divider" tabindex="-1"></li>
+      <li>
+        <a id="menu-logout" href="#!" class="red-text" data-testid="logout-btn"
+          >Logout</a
+        >
+      </li>
+    </ul>
+
+    <!-- Room / Hero -->
+    <main class="container">
+      <div class="room-card z-depth-1">
+        <!-- cute cat -->
+        <div class="center cat-area">
+          <img
+            src="/img/monster_cat.png"
+            alt="Little cat"
+            class="responsive-img cat-sprite"
+            id="cat-sprite"
+          />
+          <p class="grey-text text-darken-1">
+            Welcome back! Your Monster Cat missed you 🐾
+          </p>
+        </div>
+
+        <!-- 3 actions -->
+        <div class="row action-row">
+          <div class="col s12 m4">
+            <a
+              href="/memo.html"
+              class="btn-large waves-effect waves-light full-width"
+              data-testid="nav-memo"
+            >
+              <i class="material-icons left">event_note</i> MEMO
+            </a>
+          </div>
+          <div class="col s12 m4">
+            <a
+              href="/pet.html"
+              class="btn-large waves-effect waves-light full-width"
+              data-testid="nav-pet"
+            >
+              <i class="material-icons left">sports_esports</i> PLAY WITH CAT
+            </a>
+          </div>
+          <div class="col s12 m4">
+            <a
+              href="/chat.html"
+              class="btn-large waves-effect waves-light full-width"
+              data-testid="nav-chat"
+            >
+              <i class="material-icons left">chat</i> CHAT WITH CAT
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Toast container -->
+    <div id="toast-root"></div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/js/common/app.js"></script>
+    <script type="module" src="/js/common/socket.client.js"></script>
+    <script>
+      // Materialize init
+      document.addEventListener('DOMContentLoaded', function () {
+        const elems = document.querySelectorAll('.dropdown-trigger');
+        M.Dropdown.init(elems, {
+          constrainWidth: false,
+          coverTrigger: false,
+          alignment: 'right',
+        });
+      });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io(); // connect to server
+    </script>
+  </body>
+</html>

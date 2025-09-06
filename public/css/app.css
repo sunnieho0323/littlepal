@@ -1,0 +1,19 @@
+.littlepal-room {
+  background: linear-gradient(#fff8e1, #ffe0b2); /* warm color room */
+  min-height: 100vh;
+}
+.room-card {
+  margin-top: 40px;
+  padding: 24px;
+  border-radius: 16px;
+  background: #ffffffaa;
+  backdrop-filter: blur(4px);
+}
+.cat-area { margin: 16px 0 24px; }
+.cat-sprite { max-height: 220px; image-rendering: -webkit-optimize-contrast; }
+.full-width { width: 100%; }
+.avatar {
+  width: 32px; height: 32px; object-fit: cover; margin-right: 6px;
+  background: #ffe082; border: 2px solid #ffd54f;
+}
+.action-row .btn-large { border-radius: 12px; }
