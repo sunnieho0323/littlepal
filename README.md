@@ -49,6 +49,7 @@ App will be running at:
 ---
 📂 Project Structure
 
+```text
 littlepal/
 ├─ server.js                # Main server
 ├─ config/
@@ -70,7 +71,7 @@ littlepal/
 │     └─ chat/              # Sunnie’s scripts
 ├─ tests/                   # Unit & E2E tests
 └─ docs/                    # Documentation (SRS, Test report, etc.)
-
+```
 ---
 🛠️ Tech Stack
 
