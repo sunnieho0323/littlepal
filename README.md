@@ -47,6 +47,23 @@ App will be running at:
 👉 http://localhost:3000
 
 ---
+🛠️ Tech Stack
+
+Backend: Node.js + Express
+
+Database: MongoDB (with Mongoose ODM)
+
+Frontend: HTML, CSS, JavaScript, Materialize CSS
+
+Realtime: Socket.IO
+
+Testing: Jest + Playwright / Cypress
+
+Version Control: Git + GitHub
+
+Project Management: Trello (branches mapped 1:1 with cards)
+
+---
 📂 Project Structure
 
 ```text
