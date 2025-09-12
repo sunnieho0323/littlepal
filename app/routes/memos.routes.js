@@ -1,12 +1,15 @@
-// app/routes/memos.routes.js
-const router = require('express').Router();
-const C = require('../controllers/MemoController');
+const express = require('express');
+const router = express.Router();
+const MemoController = require('../controllers/MemoController');
+const { requireAuth } = require('../utils/auth');
 
-router.get('/', C.list);
-router.post('/', C.create);
-router.put('/:id', C.update);
-router.delete('/:id', C.remove);
-router.post('/:id/complete', C.complete);
-router.post('/:id/notify', C.notify);
+router.use(requireAuth);
+
+router.post('/', MemoController.create);
+router.get('/', MemoController.list);
+router.get('/:id', MemoController.getById);           // 自動 unread->read
+router.post('/:id/claim', MemoController.claim);      // 一次性領取
 
 module.exports = router;
+
+

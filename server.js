@@ -21,6 +21,8 @@ app.use('/api/auth', require('./app/routes/auth.routes'));
 app.use('/api/memos', require('./app/routes/memos.routes'));
 app.use('/api/pet', require('./app/routes/pet.routes'));
 app.use('/api/chat', require('./app/routes/chat.routes'));
+app.use('/api/notifications', require('./app/routes/notifications.routes'));
+
 
 // make io available inside req.app
 app.set('io', io);
