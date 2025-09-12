@@ -122,9 +122,11 @@
     const label = document.getElementById('label').value.trim();
     const [sortKey, order] = document.getElementById('sort').value.split(':');
     const unreadOnly = document.getElementById('unreadOnly').checked;
+    const includeExpired = document.getElementById('includeExpired').checked;
 
     if (label) q.set('label', label);
     if (unreadOnly) q.set('unread','true');
+    if (includeExpired) q.set('includeExpired', 'true');
     q.set('sort', sortKey);
     q.set('order', order);
 
