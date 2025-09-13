@@ -67,3 +67,25 @@ body.container {
   padding:4px 10px; 
   font-size:0.9rem; 
 }
+
+/* 左欄：改成直向排版，讓分頁永遠在清單下方 */
+.two-col .left-col {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 清單固定最小高度（你可調整 360~480 之間看起來最順）*/
+#list {
+  min-height: 420px;
+}
+
+/* 分頁和清單間距 */
+ul.pagination {
+  margin-top: 14px;
+}
+
+/* 若你之前照我說的把 disabled 改成 is-disabled，保留這段 */
+.pagination li.is-disabled a {
+  color: #bdbdbd !important;
+  pointer-events: none;
+}

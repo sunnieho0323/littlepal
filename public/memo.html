@@ -122,11 +122,11 @@
     document.getElementById('btnDeleteRead').onclick = deleteRead;
 
     document.getElementById('prev').onclick = ()=> {
-      if (document.getElementById('prevLi').classList.contains('disabled')) return;
+      if (document.getElementById('prevLi').classList.contains('is-disabled')) return;
       if (page > 1) { page--; load(); }
     };
     document.getElementById('next').onclick = ()=> {
-      if (document.getElementById('nextLi').classList.contains('disabled')) return;
+      if (document.getElementById('nextLi').classList.contains('is-disabled')) return;
       page++; load();
     };
     document.getElementById('btnSubmit').onclick = submitMemo;
@@ -151,9 +151,11 @@
     const listSummary = document.getElementById('listSummary');
     list.innerHTML = `<p class="grey-text">Loading...</p>`;
 
-    const showEmpty = () => { 
+    const showEmpty = () => {
       list.innerHTML = `<p class="grey-text">No data</p>`;
       if (listSummary) listSummary.textContent = `Page ${page} • 0 items`;
+      selectedId = null;
+      renderDetailPlaceholder();   // ← 清右欄
     };
     const showFail  = (msg='Failed to load.') => { 
       list.innerHTML = `<p class="grey-text">${msg}</p>`;
@@ -169,8 +171,8 @@
         document.getElementById('pageNum').textContent = String(page);
         const prevLi = document.getElementById('prevLi');
         const nextLi = document.getElementById('nextLi');
-        if (prevLi) prevLi.classList.add('disabled');
-        if (nextLi) nextLi.classList.add('disabled');
+        if (prevLi) prevLi.classList.add('is-disabled');
+        if (nextLi) nextLi.classList.add('is-disabled');
         showEmpty();
         return;
       }
@@ -201,11 +203,15 @@
       document.getElementById('pageNum').textContent = pageInfo.page;
       const prevLi = document.getElementById('prevLi') || document.getElementById('prev')?.parentElement;
       const nextLi = document.getElementById('nextLi') || document.getElementById('next')?.parentElement;
-      if (prevLi) prevLi.classList.toggle('disabled', (pageInfo.page || 1) <= 1);
-      if (nextLi) nextLi.classList.toggle('disabled', !pageInfo.hasNext);
+      if (prevLi) prevLi.classList.toggle('is-disabled', (pageInfo.page || 1) <= 1);
+      if (nextLi) nextLi.classList.toggle('is-disabled', !pageInfo.hasNext);
 
       if (listSummary) listSummary.textContent = `Page ${pageInfo.page} • ${items.length} items`;
       renderList(items);
+      if (selectedId && !items.some(it => it._id === selectedId)) {
+        selectedId = null;
+        renderDetailPlaceholder();
+      }
     } catch (e) {
       showFail();
     } finally {
