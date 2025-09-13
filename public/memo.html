@@ -119,10 +119,9 @@
     // polling notifications (push style refresh)
     setInterval(pollNotifs, 4000);
 
-    // unread heartbeat（保險輪詢）
+    // unread heartbeat
     setInterval(() => refreshUnreadBadge(true), 3000);
 
-    // 回到分頁即刷新
     window.addEventListener('focus', () => { refreshUnreadBadge(true); });
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) refreshUnreadBadge(true);
@@ -200,7 +199,7 @@
     updateUnreadBadge(total);
     if (changeAware && total !== lastUnread) {
       lastUnread = total;
-      await load(); // 未讀有變才刷新列表
+      await load(); 
     }
     return total;
   }
@@ -239,7 +238,7 @@
     if (!hasAttachment) return '';
     if (expired) return `<a class="btn disabled">Expired</a>`;
     if (claimed) return `<a class="btn disabled">Claimed</a>`;
-    return `<a class="btn" onclick="claim('${m._id}')">Claim</a>`;
+    return `<a class="btn" onclick="claim('${m._id}', this)">Claim</a>`;
   }
 
   function updateUnreadBadge(n) {
@@ -251,19 +250,61 @@
     const res = await fetch(API(`/memos/${id}`), { headers: getHeaders() });
     const m = await res.json().catch(()=>null);
     if (!res.ok || !m) { M.toast({ html: 'Failed to open memo' }); return; }
-    // 若後端不會自動標記已讀，這裡可補：
-    // await fetch(API(`/memos/${id}`), { method:'PATCH', headers: getHeaders(), body: JSON.stringify({ status:'read' }) }).catch(()=>{});
+    
     M.toast({html: `#${m._id} opened: ${escapeHtml(m.subject)}`});
     await refreshUnreadBadge(true);
   }
 
-  async function claim(id) {
-    const res = await fetch(API(`/memos/${id}/claim`), { method:'POST', headers: getHeaders() });
-    const data = await res.json().catch(()=> ({}));
-    if (res.ok) M.toast({ html: 'Claim successful!' });
-    else M.toast({ html: `Failed: ${data.code || res.status}` });
-    await refreshUnreadBadge(true);
+  async function claim(id, btnEl) {
+    try {
+
+      if (btnEl) {
+        btnEl.classList.add('disabled');
+        btnEl.textContent = 'Claiming...';
+      }
+
+      const res = await fetch(API(`/memos/${id}/claim`), { method:'POST', headers: getHeaders() });
+      const data = await res.json().catch(()=> ({}));
+
+      if (res.ok) {
+        M.toast({ html: 'Claim successful!' });
+
+        if (btnEl) {
+          btnEl.textContent = 'Claimed';
+          btnEl.classList.add('disabled');
+          btnEl.onclick = null;
+        }
+      } else {
+
+        const code = data.code || res.status;
+        M.toast({ html: `Failed: ${code}` });
+
+        if (btnEl) {
+          if (code === 409) { // already claimed
+            btnEl.textContent = 'Claimed';
+            btnEl.classList.add('disabled');
+            btnEl.onclick = null;
+          } else if (code === 410 || code === 400) { // expired
+            btnEl.textContent = 'Expired';
+            btnEl.classList.add('disabled');
+            btnEl.onclick = null;
+          } else {
+            btnEl.textContent = 'Claim';
+            btnEl.classList.remove('disabled');
+          }
+        }
+      }
+    } catch (_) {
+      if (btnEl) {
+        btnEl.textContent = 'Claim';
+        btnEl.classList.remove('disabled');
+      }
+    } finally {
+
+      await load();
+    }
   }
+
 
   async function submitMemo() {
     const to = document.getElementById('to').value.trim();
@@ -272,10 +313,10 @@
     const labelsArr = document.getElementById('labels').value.split(',').map(s=>s.trim()).filter(Boolean);
     const expiresVal = document.getElementById('expiresAt').value;
     const attOne = parseJsonOrNull(document.getElementById('attachmentJson').value);
-    const attachments = attOne ? (Array.isArray(attOne) ? attOne : [attOne]) : [];
+    const attachments = attOne ? (Array.isArray(attOne) ? attOne : [attOne]) : []; 
 
     const payload = {
-      recipientId: to || undefined, // 若要用 /memos/send 可改 endpoint
+      recipientId: to || undefined, 
       subject,
       body: bodyText,
       labels: labelsArr.length ? labelsArr : ['inbox'],
@@ -303,7 +344,7 @@
       const items = json.data || json.items || [];
       if (items.length) {
         since = items[items.length - 1].createdAt || since;
-        // 有新通知 → 讓 unread 心跳處理刷新
+        
         refreshUnreadBadge(true);
       }
     } catch (_) {}
