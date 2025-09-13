@@ -6,21 +6,25 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
-    .memo-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; }
-    .badges { display:flex; gap:8px; }
+    body.container { max-width: 920px; }
+    .memo-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid #eee; }
+    .memo-row .left { flex: 1 1 auto; min-width: 0; }
+    .memo-row .subject { font-weight:600; }
+    .memo-row .preview { color:#777; }
+    .badges { display:flex; gap:8px; margin-top:6px; }
   </style>
 </head>
 <body class="container">
   <h5>
     Mailbox
-    <span id="unreadBadge" class="new badge" data-badge-caption="unread">0</span>
+    <span id="unreadBadge" class="new badge" data-badge-caption="Unread">0</span>
   </h5>
 
   <div class="row">
-    <div class="input-field col s6">
+    <div class="input-field col s12 m6">
       <input id="search" type="text" placeholder="Search subject or body"/>
     </div>
-    <div class="input-field col s3">
+    <div class="input-field col s6 m3">
       <select id="sort">
         <option value="createdAt:desc" selected>Newest</option>
         <option value="createdAt:asc">Oldest</option>
@@ -29,12 +33,12 @@
       </select>
       <label>Sort</label>
     </div>
-    <div class="input-field col s3">
+    <div class="input-field col s6 m3">
       <input id="label" type="text" placeholder="Label (optional)"/>
     </div>
   </div>
 
-  <div class="row">
+  <div class="row" style="margin-top:-12px">
     <label>
       <input type="checkbox" id="unreadOnly"/>
       <span>Unread only</span>
@@ -53,15 +57,14 @@
     <li id="nextLi" class="waves-effect"><a href="#!" id="next">Next</a></li>
   </ul>
 
-
   <a class="btn modal-trigger" href="#createModal">New Memo</a>
 
   <!-- Create/Edit Modal -->
   <div id="createModal" class="modal">
     <div class="modal-content">
       <h5 id="modalTitle">New Memo</h5>
-      <div class="input-field"><input id="to" placeholder="Recipient UserId"/></div>
-      <div class="input-field"><input id="subject" placeholder="Subject"/></div>
+      <div class="input-field"><input id="to" placeholder="Recipient UserId (optional/for send)"/></div>
+      <div class="input-field"><input id="subject" placeholder="Subject" required/></div>
       <div class="input-field"><textarea id="body" class="materialize-textarea" placeholder="Body"></textarea></div>
       <div class="input-field"><input id="labels" placeholder="Labels (comma separated)"/></div>
       <div class="input-field"><input id="expiresAt" type="datetime-local"/></div>
@@ -76,7 +79,7 @@
 <script>
   const API = (p)=> `/api${p}`;
 
-  // Add headers: JWT if present; else dev mock x-user-id
+  // Headers: JWT if present; else dev mock x-user-id
   function getHeaders() {
     const h = { 'Content-Type':'application/json' };
     const token = localStorage.getItem('jwt');
@@ -87,96 +90,155 @@
 
   let page = 1;
   let since = '1970-01-01T00:00:00.000Z'; // notifications polling cursor
+  let listLoading = false;
+  let lastUnread = 0;
+  let unreadAbort; // AbortController for unread fetch
 
-  document.addEventListener('DOMContentLoaded', ()=>{
+  document.addEventListener('DOMContentLoaded', async ()=>{
     M.FormSelect.init(document.querySelectorAll('select'), {});
     M.Modal.init(document.querySelectorAll('.modal'), {});
-    load();
+    await load();
+    lastUnread = await refreshUnreadBadge(true);
 
     document.getElementById('search').addEventListener('input', debounce(load, 300));
     document.getElementById('sort').addEventListener('change', load);
     document.getElementById('label').addEventListener('input', debounce(load, 300));
     document.getElementById('unreadOnly').addEventListener('change', load);
-    // includeExpired not implemented on backend (MVP) → ignored for now
     document.getElementById('includeExpired').addEventListener('change', load);
 
-    document.getElementById('prev').onclick = (e)=> {
+    document.getElementById('prev').onclick = ()=> {
       if (document.getElementById('prevLi').classList.contains('disabled')) return;
       if (page > 1) { page--; load(); }
     };
-    document.getElementById('next').onclick = (e)=> {
+    document.getElementById('next').onclick = ()=> {
       if (document.getElementById('nextLi').classList.contains('disabled')) return;
       page++; load();
     };
     document.getElementById('btnSubmit').onclick = submitMemo;
 
-    // polling notifications
+    // polling notifications (push style refresh)
     setInterval(pollNotifs, 4000);
+
+    // unread heartbeat（保險輪詢）
+    setInterval(() => refreshUnreadBadge(true), 3000);
+
+    // 回到分頁即刷新
+    window.addEventListener('focus', () => { refreshUnreadBadge(true); });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) refreshUnreadBadge(true);
+    });
   });
 
   async function load() {
-    const q = new URLSearchParams();
-    q.set('page', page);
-    q.set('pageSize', 10);
+    if (listLoading) return;
+    listLoading = true;
+    const list = document.getElementById('list');
+    list.innerHTML = `<p class="grey-text">Loading...</p>`;
+    try {
+      const q = new URLSearchParams();
+      q.set('page', page);
+      q.set('pageSize', 10);
 
-    const label = document.getElementById('label').value.trim();
-    const [sortKey, order] = document.getElementById('sort').value.split(':');
-    const unreadOnly = document.getElementById('unreadOnly').checked;
-    const includeExpired = document.getElementById('includeExpired').checked;
+      const search = document.getElementById('search').value.trim();
+      if (search) q.set('q', search);
 
-    if (label) q.set('label', label);
-    if (unreadOnly) q.set('unread','true');
-    if (includeExpired) q.set('includeExpired', 'true');
-    q.set('sort', sortKey);
-    q.set('order', order);
+      const label = document.getElementById('label').value.trim();
+      const [sortKey, order] = document.getElementById('sort').value.split(':');
+      const unreadOnly = document.getElementById('unreadOnly').checked;
+      const includeExpired = document.getElementById('includeExpired').checked;
 
-    const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders() });
-    const json = await res.json();
-    console.log('memos response ->', json);
+      if (label) q.set('label', label);
+      if (unreadOnly) q.set('unread','true');          // or use status=unread (backend compatible)
+      if (includeExpired) q.set('includeExpired', 'true');
+      q.set('sort', sortKey);
+      q.set('order', order);
 
-    const items = json.data || json.items || [];
-    const pageInfo = json.pageInfo || { page: 1, pageSize: 10, total: items.length, hasNext: false };
+      const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders() });
+      if (!res.ok) throw new Error('fetch memos failed');
+      const json = await res.json();
 
-    document.getElementById('pageNum').textContent = pageInfo.page;
-    const prevLi = document.getElementById('prevLi') || document.getElementById('prev')?.parentElement;
-    const nextLi = document.getElementById('nextLi') || document.getElementById('next')?.parentElement;
-    if (prevLi) prevLi.classList.toggle('disabled', pageInfo.page <= 1);
-    if (nextLi) nextLi.classList.toggle('disabled', !pageInfo.hasNext);
+      const items = json.data || json.items || [];
+      const pageInfo = json.pageInfo || { page: 1, pageSize: 10, total: items.length, hasNext: false };
 
-    renderList(items);
-    updateUnreadBadge(unreadCount);
+      document.getElementById('pageNum').textContent = pageInfo.page;
+      const prevLi = document.getElementById('prevLi') || document.getElementById('prev')?.parentElement;
+      const nextLi = document.getElementById('nextLi') || document.getElementById('next')?.parentElement;
+      if (prevLi) prevLi.classList.toggle('disabled', pageInfo.page <= 1);
+      if (nextLi) nextLi.classList.toggle('disabled', !pageInfo.hasNext);
+
+      renderList(items);
+    } catch(_) {
+      list.innerHTML = `<p class="grey-text">Failed to load.</p>`;
+    } finally {
+      listLoading = false;
+    }
   }
 
+  async function fetchUnreadTotal() {
+    try {
+      if (unreadAbort) unreadAbort.abort();
+      unreadAbort = new AbortController();
+
+      const candidates = [
+        '/memos?unread=true&limit=1&page=1',
+        '/memos?status=unread&limit=1&page=1'
+      ];
+      for (const path of candidates) {
+        const res = await fetch(API(path), { headers: getHeaders(), signal: unreadAbort.signal });
+        if (!res.ok) continue;
+        const json = await res.json().catch(()=>({}));
+        const total = json?.counts?.unread ?? json?.pageInfo?.total ?? json?.meta?.total ?? json?.total ?? 0;
+        const n = Number(total);
+        if (!Number.isNaN(n)) return n;
+      }
+    } catch(_) {}
+    return 0;
+  }
+
+  async function refreshUnreadBadge(changeAware = false) {
+    const total = await fetchUnreadTotal();
+    updateUnreadBadge(total);
+    if (changeAware && total !== lastUnread) {
+      lastUnread = total;
+      await load(); // 未讀有變才刷新列表
+    }
+    return total;
+  }
 
   function renderList(items) {
     const list = document.getElementById('list');
     if (!items.length) { list.innerHTML = `<p class="grey-text">No data</p>`; return; }
-    list.innerHTML = items.map(m => `
-      <div class="memo-row">
-        <div>
-          <span class="badge ${m.unread ? 'new':''}" data-badge-caption="${m.unread?'Unread':'Read'}"></span>
-          <b>${escapeHtml(m.subject)}</b>
-          <div class="grey-text">${escapeHtml((m.body||'').slice(0, 80))}${(m.body||'').length>80?'...':''}</div>
-          <div class="badges">
-            ${m.label ? `<span class="new badge" data-badge-caption="${escapeHtml(m.label)}"></span>` : ''}
-            ${m.expiresAt ? `<span class="badge" data-badge-caption="exp:${new Date(m.expiresAt).toLocaleString()}"></span>`:''}
+    list.innerHTML = items.map(m => {
+      const isUnread = (m.status === 'unread') || (m.unread === true);
+      const labels = Array.isArray(m.labels) ? m.labels : (m.label ? [m.label] : []);
+      return `
+        <div class="memo-row">
+          <div class="left">
+            <span class="badge ${isUnread ? 'new':''}" data-badge-caption="${isUnread?'Unread':'Read'}"></span>
+            <span class="subject">${escapeHtml(m.subject)}</span>
+            <div class="preview">${escapeHtml((m.body||'').slice(0, 80))}${(m.body||'').length>80?'...':''}</div>
+            <div class="badges">
+              ${labels.map(lb => `<span class="new badge" data-badge-caption="${escapeHtml(lb)}"></span>`).join('')}
+              ${m.expiresAt ? `<span class="badge" data-badge-caption="exp:${new Date(m.expiresAt).toLocaleString()}"></span>`:''}
+            </div>
+          </div>
+          <div>
+            <a class="btn-flat" onclick="openMemo('${m._id}')">Open</a>
+            ${renderClaimBtn(m)}
           </div>
         </div>
-        <div>
-          <a class="btn-flat" onclick="openMemo('${m._id}')">Open</a>
-          ${renderClaimBtn(m)}
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   function renderClaimBtn(m) {
     const now = Date.now();
     const expired = m.expiresAt && new Date(m.expiresAt).getTime() <= now;
-    const att = m.attachments || null; // backend field is "attachments"
-    if (!att) return '';
+    const hasAttachment = Array.isArray(m.attachments) ? m.attachments.length > 0 : !!m.attachments;
+    const claimed = !!(m.claimedAt || m.claimedBy || (m.attachments && m.attachments.claimed === true));
+    if (!hasAttachment) return '';
     if (expired) return `<a class="btn disabled">Expired</a>`;
-    if (att.claimed) return `<a class="btn disabled">Claimed</a>`;
+    if (claimed) return `<a class="btn disabled">Claimed</a>`;
     return `<a class="btn" onclick="claim('${m._id}')">Claim</a>`;
   }
 
@@ -187,10 +249,12 @@
 
   async function openMemo(id) {
     const res = await fetch(API(`/memos/${id}`), { headers: getHeaders() });
-    const m = await res.json();
-    if (!res.ok) { M.toast({ html: 'Failed to open memo' }); return; }
+    const m = await res.json().catch(()=>null);
+    if (!res.ok || !m) { M.toast({ html: 'Failed to open memo' }); return; }
+    // 若後端不會自動標記已讀，這裡可補：
+    // await fetch(API(`/memos/${id}`), { method:'PATCH', headers: getHeaders(), body: JSON.stringify({ status:'read' }) }).catch(()=>{});
     M.toast({html: `#${m._id} opened: ${escapeHtml(m.subject)}`});
-    load(); // refresh unread badge/list
+    await refreshUnreadBadge(true);
   }
 
   async function claim(id) {
@@ -198,42 +262,54 @@
     const data = await res.json().catch(()=> ({}));
     if (res.ok) M.toast({ html: 'Claim successful!' });
     else M.toast({ html: `Failed: ${data.code || res.status}` });
-    load();
+    await refreshUnreadBadge(true);
   }
 
   async function submitMemo() {
+    const to = document.getElementById('to').value.trim();
     const subject = document.getElementById('subject').value.trim();
     const bodyText = document.getElementById('body').value.trim();
-    const labelStr = document.getElementById('labels').value.split(',').map(s=>s.trim()).filter(Boolean)[0] || 'inbox';
+    const labelsArr = document.getElementById('labels').value.split(',').map(s=>s.trim()).filter(Boolean);
     const expiresVal = document.getElementById('expiresAt').value;
-    const attachments = parseJsonOrNull(document.getElementById('attachmentJson').value);
-    // Backend expects: { subject, body, label, attachments, expiresAt? }
+    const attOne = parseJsonOrNull(document.getElementById('attachmentJson').value);
+    const attachments = attOne ? (Array.isArray(attOne) ? attOne : [attOne]) : [];
+
     const payload = {
+      recipientId: to || undefined, // 若要用 /memos/send 可改 endpoint
       subject,
       body: bodyText,
-      label: labelStr,
-      attachments,                                // e.g. { "type":"coins", "qty":100 }
+      labels: labelsArr.length ? labelsArr : ['inbox'],
+      attachments,
       expiresAt: expiresVal ? new Date(expiresVal).toISOString() : null
     };
 
-    const res = await fetch(API('/memos'), { method:'POST', headers: getHeaders(), body: JSON.stringify(payload) });
+    const endpoint = to ? '/memos/send' : '/memos';
+    const res = await fetch(API(endpoint), { method:'POST', headers: getHeaders(), body: JSON.stringify(payload) });
     const data = await res.json().catch(()=> ({}));
-    if (res.ok) { M.toast({ html: 'Created!' }); page = 1; load(); }
-    else M.toast({ html: `Error: ${data.message || data.code || 'Failed to create memo'}` });
-  }
-
-  async function pollNotifs() {
-    const res = await fetch(API(`/notifications?since=${encodeURIComponent(since)}`), { headers });
-    if (!res.ok) return;
-    const json = await res.json();
-    const items = json.data || [];
-    if (items.length) {
-      since = items[items.length - 1].createdAt; // move cursor forward
-      const badge = document.getElementById('notifBadge');
-      badge.textContent = String((parseInt(badge.textContent,10) || 0) + items.length);
+    if (res.ok) {
+      M.toast({ html: 'Created!' });
+      page = 1;
+      await refreshUnreadBadge(true);
+    } else {
+      M.toast({ html: `Error: ${data.message || data.code || 'Failed to create memo'}` });
     }
   }
 
+  async function pollNotifs() {
+    try {
+      const res = await fetch(API(`/notifications?since=${encodeURIComponent(since)}`), { headers: getHeaders() });
+      if (!res.ok) return;
+      const json = await res.json();
+      const items = json.data || json.items || [];
+      if (items.length) {
+        since = items[items.length - 1].createdAt || since;
+        // 有新通知 → 讓 unread 心跳處理刷新
+        refreshUnreadBadge(true);
+      }
+    } catch (_) {}
+  }
+
+  // utils
   function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
   function parseJsonOrNull(s){ try{ return s?JSON.parse(s):null }catch(_){ return null } }
   function debounce(fn, delay){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(this,a),delay); }; }
