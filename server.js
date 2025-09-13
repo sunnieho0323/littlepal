@@ -25,6 +25,12 @@ app.use('/api/chat', require('./app/routes/chat.routes'));
 // make io available inside req.app
 app.set('io', io);
 
+// Broadcast a pet state update to everyone in that pet's room. */
+const broadcastPetUpdate = (petId, payload) => {
+  io.to(`pet:${petId}`).emit('pet:update', payload);
+};
+app.set('broadcastPetUpdate', broadcastPetUpdate);
+
 // homepage (serves the static index.html)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -39,10 +45,20 @@ io.on('connection', (socket) => {
     console.log(`👤 User ${userId} joined room:${userId}`);
   });
 
+  // per-pet rooms for realtime pet updates 
+  socket.on('join-pet', ({ petId }) => {
+    if (petId) {
+      socket.join(`pet:${petId}`);
+      console.log(`🐾 Socket ${socket.id} joined pet room: pet:${petId}`);
+      socket.emit('joined-pet', { room: `pet:${petId}` });
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('❌ Client disconnected:', socket.id);
   });
 });
+
 
 // start server
 const PORT = process.env.PORT || 3000;

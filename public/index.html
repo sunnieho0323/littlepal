@@ -126,5 +126,34 @@
     <script>
       const socket = io(); // connect to server
     </script>
+    
+    <script>
+      (async function () {
+        const petBtn = document.querySelector('[data-testid="nav-pet"]');
+        if (!petBtn) return;
+
+        let petId = localStorage.getItem('petId');
+        if (!petId) {
+          try {
+            const res = await fetch('/api/pet', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ownerId: 'demo-user', name: 'Milo', type: 'cat' })
+            });
+            if (res.ok) {
+              const data = await res.json();
+              petId = data._id;
+              localStorage.setItem('petId', petId);
+            }
+          } catch (e) {
+            console.warn('Create pet error', e);
+          }
+        }
+        if (petId) {
+          petBtn.href = `/pet.html?petId=${petId}`;
+        }
+      })();
+    </script>
+
   </body>
 </html>
