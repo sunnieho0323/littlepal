@@ -5,31 +5,52 @@
   const petName = document.getElementById('petName');
   const emotionChip = document.getElementById('emotionChip');
   const emotionLabel = document.getElementById('emotionLabel');
-  const heart = document.getElementById('heart');
+  const heart = document.getElementById('heart'); // heart chip
 
   const moodFill = document.getElementById('moodFill');
   const hungerFill = document.getElementById('hungerFill');
   const thirstFill = document.getElementById('thirstFill');
 
-  const feedBtn = document.getElementById('feedBtn');
+  const feedBtn  = document.getElementById('feedBtn');
   const drinkBtn = document.getElementById('drinkBtn');
-  const playBtn = document.getElementById('playBtn');
+  const playBtn  = document.getElementById('playBtn');
   const log = document.getElementById('log');
+
+  const inviteBtn     = document.getElementById('inviteBtn');
+  const friendInput   = document.getElementById('friendPetId');
+  const joinFriendBtn = document.getElementById('joinFriendBtn');
+  const fxLayer       = document.getElementById('fxLayer');
 
   if (!petId) {
     M.toast({ html: 'Add ?petId=... to the URL to load your pet.' });
-    [feedBtn, drinkBtn, playBtn].forEach(b => b.classList.add('disabled'));
+    [feedBtn, drinkBtn, playBtn].forEach(b => b?.classList.add('disabled'));
     return;
   }
 
-  // Global realtime: server emits 'pet:update'; filter by petId
+  // Realtime via global channel (server emits `pet:update` for all)
   const socket = io();
   socket.on('pet:update', (state) => {
     if (state?.petId === petId) render(state, '🔔 realtime update');
   });
 
+  function pulse(el, cls) {
+    el.classList.remove(cls);
+    void el.offsetWidth; // reflow to restart animation
+    el.classList.add(cls);
+    setTimeout(() => el.classList.remove(cls), 500);
+  }
+
+  function burstEmoji(emoji, x = 24) {
+    const span = document.createElement('span');
+    span.className = 'float-emoji';
+    span.textContent = emoji;
+    span.style.left = `${x}px`;
+    span.style.top = `-8px`;
+    fxLayer.appendChild(span);
+    setTimeout(() => span.remove(), 900);
+  }
+
   function setEmotion(emotion) {
-    // chip styles
     emotionChip.classList.remove('is-happy', 'is-neutral', 'is-sad');
     if (emotion === 'happy') emotionChip.classList.add('is-happy');
     else if (emotion === 'neutral') emotionChip.classList.add('is-neutral');
@@ -37,10 +58,8 @@
 
     emotionLabel.textContent = emotion;
 
-    // heart pulse
     heart.textContent = emotion === 'happy' ? '❤' : (emotion === 'neutral' ? '♡' : '♥');
-    heart.classList.add('pulse');
-    setTimeout(() => heart.classList.remove('pulse'), 500);
+    pulse(heart, 'pulse');
   }
 
   function setBar(el, value) {
@@ -53,9 +72,19 @@
     setBar(hungerFill, pet.hunger);
     setBar(thirstFill, pet.thirst ?? 50);
     if (pet.emotion) setEmotion(pet.emotion);
-    if (note) {
-      log.textContent = `${note}: mood ${pet.mood}, hunger ${pet.hunger}, thirst ${pet.thirst}`;
-    }
+    if (note) log.textContent = `${note}: mood ${pet.mood}, hunger ${pet.hunger}, thirst ${pet.thirst}`;
+  }
+
+  // Basic cooldown to prevent spam clicking (matches service ~3s)
+  let cooling = false;
+  function withCooldown(ms, fn) {
+    return async () => {
+      if (cooling) return M.toast({ html: 'Slow down a bit 😊' });
+      cooling = true;
+      try { await fn(); } finally {
+        setTimeout(() => (cooling = false), ms);
+      }
+    };
   }
 
   async function load() {
@@ -67,19 +96,35 @@
     }
   }
 
-  const wrap = (fn, label) => async () => {
-    try {
-      const data = await fn(petId);
+  const action = (apiCall, label, emoji, animTarget) =>
+    withCooldown(900, async () => {
+      const data = await apiCall(petId);
       render(data, label);
+      if (animTarget) pulse(animTarget, 'pop');
+      burstEmoji(emoji, 42);
       M.toast({ html: label });
-    } catch (e) {
-      M.toast({ html: e.message || 'Action failed' });
-    }
-  };
+    });
 
-  feedBtn.addEventListener('click',  wrap(PetAPI.feed,  '🍖 Fed'));
-  drinkBtn.addEventListener('click', wrap(PetAPI.drink, '💧 Drank'));
-  playBtn.addEventListener('click',  wrap(PetAPI.play,  '🎮 Played'));
+  feedBtn .addEventListener('click', action(PetAPI.feed,  '🍖 Fed',   '🍗', feedBtn));
+  drinkBtn.addEventListener('click', action(PetAPI.drink, '💧 Drank', '💧', drinkBtn));
+  playBtn .addEventListener('click', action(PetAPI.play,  '🎮 Played','🎾', playBtn));
+
+  // Friends
+  inviteBtn.addEventListener('click', async () => {
+    const url = `${location.origin}/pet.html?petId=${encodeURIComponent(petId)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      M.toast({ html: 'Link copied! Share with your friend.' });
+    } catch {
+      prompt('Copy this link:', url);
+    }
+  });
+
+  joinFriendBtn.addEventListener('click', () => {
+    const id = (friendInput.value || '').trim();
+    if (!id) return M.toast({ html: 'Paste a petId first.' });
+    location.href = `/pet.html?petId=${encodeURIComponent(id)}`;
+  });
 
   load();
 })();
