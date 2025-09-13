@@ -1,4 +1,4 @@
-// public/js/memo/memo.page.js
+// public/js/memo/memo.api.js
 import { memoApi } from './memo.api.js';
 
 const el = {

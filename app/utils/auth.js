@@ -1,3 +1,4 @@
+// app/utils/auth.js
 const mongoose = require('mongoose');
 
 function requireAuth(req, _res, next) {

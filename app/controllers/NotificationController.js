@@ -1,3 +1,4 @@
+// app/controllers/NotificationController.js
 const { listSince } = require('../services/NotificationService');
 
 module.exports = {

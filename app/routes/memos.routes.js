@@ -1,3 +1,4 @@
+// app/routes/memos.routes.js
 const express = require('express');
 const router = express.Router();
 const MemoController = require('../controllers/MemoController');
@@ -7,8 +8,8 @@ router.use(requireAuth);
 
 router.post('/', MemoController.create);
 router.get('/', MemoController.list);
-router.get('/:id', MemoController.getById);           // 自動 unread->read
-router.post('/:id/claim', MemoController.claim);      // 一次性領取
+router.get('/:id', MemoController.getById);           
+router.post('/:id/claim', MemoController.claim);      
 
 module.exports = router;
 
