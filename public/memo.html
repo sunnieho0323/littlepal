@@ -474,15 +474,19 @@
     if (Array.isArray(att)) {
       att.forEach(a=>{
         const t = (a.type || '').toLowerCase();
-        if (t === 'currency' && a.payload) {
+        if (t === 'item' && a.payload) {
           for (const k of Object.keys(a.payload)) {
             const v = a.payload[k];
-            if (k.toLowerCase().includes('gold') || k.toLowerCase().includes('coin')) pushChip('🪙', `+${v}`);
-            else if (k.toLowerCase().includes('gem') || k.toLowerCase().includes('diamond')) pushChip('💎', `+${v}`);
+            if (k.toLowerCase().includes('burger') || k.toLowerCase().includes('food')) pushChip('🍔', `+${v}`);
+            else if (k.toLowerCase().includes('soft drink') || k.toLowerCase().includes('drinks')) pushChip('🍹', `+${v}`);
             else pushChip('🎁', `${k}: +${v}`);
           }
-        } else if (t === 'item' && a.payload) {
-          pushChip('📦', `${a.payload.name || 'Item'} ×${a.payload.qty || 1}`);
+        } else if (t === 'heart' && a.payload) {
+          for (const k of Object.keys(a.payload)) {
+            const v = a.payload[k];
+            if (k.toLowerCase().includes('heart')) pushChip('❤️', `+${v}`);
+            else pushChip('🎁', `${k}: +${v}`);
+          }
         } else {
           pushChip('🎁', JSON.stringify(a.payload ?? a));
         }
@@ -490,8 +494,8 @@
     } else if (typeof att === 'object') {
       for (const k of Object.keys(att)) {
         const v = att[k];
-        if (k.toLowerCase().includes('gold') || k.toLowerCase().includes('coin')) pushChip('🪙', `+${v}`);
-        else if (k.toLowerCase().includes('gem') || k.toLowerCase().includes('diamond')) pushChip('💎', `+${v}`);
+        if (k.toLowerCase().includes('burger') || k.toLowerCase().includes('food')) pushChip('🍔', `+${v}`);
+        else if (k.toLowerCase().includes('soft drink') || k.toLowerCase().includes('drinks')) pushChip('🍹', `+${v}`);
         else pushChip('🎁', `${k}: +${v}`);
       }
     } else {

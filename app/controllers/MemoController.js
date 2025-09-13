@@ -10,6 +10,7 @@ exports.complete = async (req,res,next)=>{ try{ res.json(await MemoService.compl
 exports.notify = async (req,res,next)=>{ try{ res.json(await MemoService.notify(req.user?.id, req.params.id)); }catch(e){next(e);} };
 */
 
+const mongoose = require('mongoose');
 const MemoService = require('../services/MemoService');
 
 function ok(res, data) { return res.json(data); }
@@ -53,5 +54,27 @@ module.exports = {
     const { status, result, error } = await MemoService.claimAttachment(userId, req.params.id);
     if (status !== 200) return err(res, status, error);
     return ok(res, result);
+  },
+
+  async send(req, res, next) {
+    try {
+      const { recipientId, subject, body, label, attachments, expiresAt } = req.body || {};
+      if (!recipientId) return err(res, 400, 'VALIDATION_ERROR', 'recipientId is required');
+      if (!mongoose.isValidObjectId(recipientId)) return err(res, 400, 'VALIDATION_ERROR', 'recipientId must be ObjectId');
+      if (!subject) return err(res, 400, 'VALIDATION_ERROR', 'subject is required');
+      if (expiresAt && isNaN(new Date(expiresAt))) return err(res, 400, 'VALIDATION_ERROR', 'invalid expiresAt');
+
+      const memo = await MemoService.createMemo(
+        new mongoose.Types.ObjectId(recipientId),
+        {
+          subject: String(subject),
+          body: body || '',
+          label: label || 'inbox',
+          attachments: Array.isArray(attachments) ? attachments : (attachments ? [attachments] : []),
+          expiresAt: expiresAt ? new Date(expiresAt) : null,
+        }
+      );
+      return ok(res, memo);
+    } catch (e) { next(e); }
   },
 };

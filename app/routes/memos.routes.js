@@ -9,7 +9,9 @@ router.use(requireAuth);
 router.post('/', MemoController.create);
 router.get('/', MemoController.list);
 router.get('/:id', MemoController.getById);           
-router.post('/:id/claim', MemoController.claim);      
+router.post('/:id/claim', MemoController.claim);
+router.post('/send', MemoController.send);
+
 
 module.exports = router;
 
