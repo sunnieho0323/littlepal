@@ -3,24 +3,12 @@
 <head>
   <meta charset="utf-8"/>
   <title>Mailbox - Virtual Pet</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
+
+  <!-- Materialize CSS-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="stylesheet" href="css/memo.css">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <style>
-    body.container { max-width: 1080px; }
-    .list-toolbar { display:flex; justify-content:space-between; align-items:center; margin:6px 0 10px; }
-    .two-col { display:flex; gap:16px; }
-    .left-col { width: 46%; }
-    .right-col { width: 54%; border-left: 1px solid #eee; padding-left: 16px; min-height: 360px; }
-    .memo-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid #eee; cursor:pointer; }
-    .memo-row .left { flex: 1 1 auto; min-width: 0; }
-    .memo-row .subject { font-weight:600; }
-    .memo-row .preview { color:#777; }
-    .badges { display:flex; gap:8px; margin-top:6px; }
-    .selected { background:#fafafa; border-left:3px solid #26a69a; padding-left:7px; }
-    .muted { color:#9e9e9e; }
-    .attachment-icons { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
-    .attachment-chip { display:inline-flex; align-items:center; gap:6px; border:1px solid #ddd; border-radius:16px; padding:4px 10px; font-size:0.9rem; }
-  </style>
 </head>
 <body class="container">
   <h5 style="display:flex; align-items:center; justify-content:space-between; gap:12px">
@@ -99,7 +87,8 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+ <!--materialize CSS-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script>
   const API = (p)=> `/api${p}`;
 
@@ -369,7 +358,6 @@
     await refreshUnreadBadge(true);
   }
 
-
   async function claim(id, btnEl) {
     try {
 
@@ -419,7 +407,6 @@
       await load();
     }
   }
-
 
   async function submitMemo() {
     const to = document.getElementById('to').value.trim();
@@ -572,7 +559,6 @@ async function deleteRead(){
   M.toast({ html: `Deleted ${deleted} read memos` });
   await refreshUnreadBadge(true);
 }
-
 
   // utils
   function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
