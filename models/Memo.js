@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const { Schema, Types } = mongoose;
 
 const AttachmentSchema = new Schema({
-  type: { type: String, required: true },          // 'currency' | 'item' | ...
-  payload: { type: Schema.Types.Mixed, default: {} }, // {gold:100} 
+  type: { type: String, required: true },          // 'heart' | 'item' | ...
+  payload: { type: Schema.Types.Mixed, default: {} }, // {heart:100} 
   claimed: { type: Boolean, default: false },
   claimedAt: { type: Date, default: null },
 }, { _id: false });

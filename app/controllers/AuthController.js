@@ -1,5 +1,5 @@
-// Minimal stub so routes have real handler functions
-// TODO: Replace with real logic + JWT later
+// app/controllers/AuthController.js
+// will replace Owen's version later
 
 exports.register = async (req, res, next) => {
   try {

@@ -98,18 +98,48 @@ async function claimAttachment(userId, memoId) {
 
   if (Memo.isExpired(memo)) return { status: 410, error: 'MEMO_EXPIRED' };
 
-  if (!memo.attachments) return { status: 400, error: 'NO_ATTACHMENT' };
+  // 無附件
+  if (!memo.attachments || (Array.isArray(memo.attachments) && memo.attachments.length === 0)) {
+    return { status: 400, error: 'NO_ATTACHMENT' };
+  }
 
-  if (memo.attachments.claimed) return { status: 409, error: 'ALREADY_CLAIMED' };
+  // 已全數領取
+  if (Array.isArray(memo.attachments)) {
+    const allClaimed = memo.attachments.every(a => a?.claimed === true);
+    if (allClaimed) return { status: 409, error: 'ALREADY_CLAIMED' };
+  } else if (memo.attachments.claimed) {
+    return { status: 409, error: 'ALREADY_CLAIMED' };
+  }
 
-  memo.attachments.claimed = true;
-  memo.attachments.claimedAt = new Date();
-  await memo.save();
+  const now = new Date();
 
-  return {
-    status: 200,
-    result: { memoId: memo._id, claimedAt: memo.attachments.claimedAt },
-  };
+  // 原子更新：把所有未領的附件設為已領，且避免過期
+  const r = await Memo.updateOne(
+    {
+      _id: memoId,
+      userId,
+      deletedAt: null,
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }],
+    },
+    {
+      $set: {
+        unread: false,
+        'attachments.$[a].claimed': true,
+        'attachments.$[a].claimedAt': now,
+      },
+    },
+    { arrayFilters: [{ 'a.claimed': { $ne: true } }] }
+  );
+
+  if (r.modifiedCount === 0) {
+    // 可能同時被領取或過期
+    return { status: 409, error: 'ALREADY_CLAIMED_OR_EXPIRED' };
+  }
+
+  // 通知（讓 polling 有事件）
+  await createNotification(userId, 'memo.claimed', { memoId });
+
+  return { status: 200, result: { memoId, claimedAt: now } };
 }
 
 module.exports = {

@@ -35,6 +35,7 @@ form.addEventListener('submit', async (e) => {
   await refresh();
 });
 
+/*
 list.addEventListener('click', async (e) => {
   const li = e.target.closest('li.collection-item');
   if (!li) return;
@@ -50,5 +51,6 @@ list.addEventListener('click', async (e) => {
     li.remove();
   }
 });
+*/
 
 document.addEventListener('DOMContentLoaded', refresh);

@@ -122,11 +122,11 @@
     document.getElementById('btnDeleteRead').onclick = deleteRead;
 
     document.getElementById('prev').onclick = ()=> {
-      if (document.getElementById('prevLi').classList.contains('is-disabled')) return;
+      if (document.getElementById('prevLi').classList.contains('disabled')) return;
       if (page > 1) { page--; load(); }
     };
     document.getElementById('next').onclick = ()=> {
-      if (document.getElementById('nextLi').classList.contains('is-disabled')) return;
+      if (document.getElementById('nextLi').classList.contains('disabled')) return;
       page++; load();
     };
     document.getElementById('btnSubmit').onclick = submitMemo;
@@ -143,9 +143,16 @@
     });
   });
 
+  let loadAbort;
+  let loadSeq = 0;
+
   async function load() {
-    if (listLoading) return;
+    if (listLoading) {
+      try { loadAbort?.abort(); } catch(_) {}
+    }
     listLoading = true;
+    const seq = ++loadSeq;
+    loadAbort = new AbortController();
 
     const list = document.getElementById('list');
     const listSummary = document.getElementById('listSummary');
@@ -171,8 +178,8 @@
         document.getElementById('pageNum').textContent = String(page);
         const prevLi = document.getElementById('prevLi');
         const nextLi = document.getElementById('nextLi');
-        if (prevLi) prevLi.classList.add('is-disabled');
-        if (nextLi) nextLi.classList.add('is-disabled');
+        if (prevLi) prevLi.classList.toggle('disabled', page <= 1);
+        if (nextLi) nextLi.classList.add('disabled');
         showEmpty();
         return;
       }
@@ -203,10 +210,11 @@
       document.getElementById('pageNum').textContent = pageInfo.page;
       const prevLi = document.getElementById('prevLi') || document.getElementById('prev')?.parentElement;
       const nextLi = document.getElementById('nextLi') || document.getElementById('next')?.parentElement;
-      if (prevLi) prevLi.classList.toggle('is-disabled', (pageInfo.page || 1) <= 1);
-      if (nextLi) nextLi.classList.toggle('is-disabled', !pageInfo.hasNext);
+      if (prevLi) prevLi.classList.toggle('disabled', (pageInfo.page || 1) <= 1);
+      if (nextLi) nextLi.classList.toggle('disabled', !pageInfo.hasNext);
 
       if (listSummary) listSummary.textContent = `Page ${pageInfo.page} • ${items.length} items`;
+      if (seq !== loadSeq) return;
       renderList(items);
       if (selectedId && !items.some(it => it._id === selectedId)) {
         selectedId = null;
@@ -254,10 +262,10 @@
   function buildQuery(pageNum, size){
     const q = new URLSearchParams();
     q.set('page', pageNum);
-    q.set('pageSize', size);         // 你的後端若用 limit，也可加 q.set('limit', size);
+    q.set('pageSize', size);
 
     const search = document.getElementById('search').value.trim();
-    if (search) q.set('q', search);
+if (search) q.set('search', search);
 
     const label = document.getElementById('label').value.trim();
     const [sortKey, order] = document.getElementById('sort').value.split(':');
@@ -280,10 +288,11 @@
     list.innerHTML = items.map(m => {
       const isUnread = (m.status === 'unread') || (m.unread === true);
       const labels = Array.isArray(m.labels) ? m.labels : (m.label ? [m.label] : []);
-      const expired = m.expiresAt && new Date(m.expiresAt).getTime() <= Date.now();
-      const claimed = !!(m.claimedAt || m.claimedBy || (m.attachments && m.attachments.claimed === true));
-      const hasAttachment = Array.isArray(m.attachments) ? m.attachments.length > 0 : !!m.attachments;
-
+      const expired = isExpired(m);
+      const claimed = isClaimed(m);
+      const hasAtt = hasAttachment(m);
+      const fmt = new Intl.DateTimeFormat(undefined, {year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit'});
+      
       return `
         <div class="memo-row ${selectedId===m._id?'selected':''}" onclick="openMemo('${m._id}', this)">
           <div class="left">
@@ -292,12 +301,12 @@
             <div class="preview">${escapeHtml((m.body||'').slice(0, 80))}${(m.body||'').length>80?'...':''}</div>
             <div class="badges">
               ${labels.map(lb => `<span class="new badge" data-badge-caption="${escapeHtml(lb)}"></span>`).join('')}
-              ${m.expiresAt ? `<span class="badge" data-badge-caption="exp:${new Date(m.expiresAt).toLocaleString()}"></span>`:''}
-              ${hasAttachment ? `<span class="badge" data-badge-caption="${claimed ? 'claimed' : (expired ? 'expired' : 'gift')}"></span>` : ''}
+              ${m.expiresAt ? `<span class="badge" data-badge-caption="expires: ${fmt.format(new Date(m.expiresAt))}"></span>`:''}
+              ${hasAtt ? `<span class="badge" data-badge-caption="${claimed ? 'claimed' : (expired ? 'expired' : 'gift')}"></span>` : ''}
             </div>
           </div>
           <div>
-            <a class="btn-flat">Open</a>
+            <a class="btn-flat" onclick="event.stopPropagation()">Open</a>
             ${renderClaimBtn(m)}
           </div>
         </div>
@@ -305,16 +314,14 @@
     }).join('');
   }
 
+  const claimedLocal = new Set();
+
   function renderClaimBtn(m) {
-    const now = Date.now();
-    const expired = m.expiresAt && new Date(m.expiresAt).getTime() <= now;
-    const hasAttachment = Array.isArray(m.attachments) ? m.attachments.length > 0 : !!m.attachments;
-    const claimed = !!(m.claimedAt || m.claimedBy || (m.attachments && m.attachments.claimed === true));
-    if (!hasAttachment) return '';
-    if (expired) return `<a class="btn disabled">Expired</a>`;
-    if (claimed) return `<a class="btn disabled">Claimed</a>`;
-    return `<a class="btn" onclick="claim('${m._id}', this)">Claim</a>`;
-  }
+  if (!hasAttachment(m)) return '';
+  if (isExpired(m)) return `<a class="btn disabled" onclick="event.stopPropagation()">Expired</a>`;
+  if (isClaimed(m)) return `<a class="btn disabled" onclick="event.stopPropagation()">Claimed</a>`;
+  return `<a class="btn" onclick="claim('${m._id}', this, event)">Claim</a>`;
+}
 
   function updateUnreadBadge(n) {
     const el = document.getElementById('unreadBadge');
@@ -326,15 +333,15 @@
     // 左欄選取樣式
     Array.from(document.querySelectorAll('.memo-row')).forEach(el=> el.classList.remove('selected'));
     if (rowEl) rowEl.classList.add('selected');
-
+    
     const res = await fetch(API(`/memos/${id}`), { headers: getHeaders() });
     const m = await res.json().catch(()=>null);
     if (!res.ok || !m) { M.toast({ html: 'Failed to open memo' }); return; }
 
     const isUnread = (m.status === 'unread') || (m.unread === true);
-    const claimed = !!(m.claimedAt || m.claimedBy || (m.attachments && m.attachments.claimed === true));
-    const expired = m.expiresAt && new Date(m.expiresAt).getTime() <= Date.now();
-    const hasAttachment = Array.isArray(m.attachments) ? m.attachments.length > 0 : !!m.attachments;
+    const claimed = isClaimed(m);
+    const expired = isExpired(m);
+    const hasAtt = hasAttachment(m);
 
     const panel = document.getElementById('detailPanel');
     if (panel) {
@@ -342,64 +349,68 @@
         <h6>${escapeHtml(m.subject)}</h6>
         <div class="muted" style="margin-top:-4px">${new Date(m.createdAt || m.updatedAt || Date.now()).toLocaleString()}</div>
         ${isUnread ? `<div style="margin:6px 0"><span class="new badge" data-badge-caption="Unread"></span></div>` : ''}
+        
         <p style="white-space:pre-wrap; margin-top:8px">${escapeHtml(m.body || '')}</p>
-
+      
         <div class="attachment-icons" id="attachments"></div>
 
         <div style="display:flex; gap:8px; margin-top:16px">
-          <a class="btn red" onclick="deleteMemo('${m._id}')">Delete</a>
+          
+          <a class="btn red" onclick="deleteMemo('${m._id}', event)">Delete</a>
           ${
-            hasAttachment
+            hasAtt
               ? (expired ? `<a class="btn disabled">Expired</a>`
                 : (claimed ? `<a class="btn disabled">Claimed</a>`
-                : `<a class="btn" id="detailClaimBtn" onclick="claim('${m._id}', this)">Claim</a>`))
+                : `<a class="btn" onclick="claim('${m._id}', this, event)">CLAIM</a>`))
               : `<span class="muted">No attachment</span>`
           }
         </div>
       `;
       renderAttachmentIcons(m.attachments);
     }
+      
 
     // 你原本會靠後端/重新載入來標已讀；保留未讀刷新
     await refreshUnreadBadge(true);
   }
 
-  async function claim(id, btnEl) {
+  async function claim(id, btnEl, ev) {
     try {
-
+      if (ev) ev.stopPropagation();
       if (btnEl) {
         btnEl.classList.add('disabled');
+        btnEl.setAttribute('aria-disabled', 'true');
+        btnEl.onclick = null;            
         btnEl.textContent = 'Claiming...';
+        btnEl.style.pointerEvents = 'none';
       }
 
       const res = await fetch(API(`/memos/${id}/claim`), { method:'POST', headers: getHeaders() });
       const data = await res.json().catch(()=> ({}));
 
       if (res.ok) {
+        claimedLocal.add(id); 
         M.toast({ html: 'Claim successful!' });
-
         if (btnEl) {
           btnEl.textContent = 'Claimed';
-          btnEl.classList.add('disabled');
-          btnEl.onclick = null;
         }
       } else {
-
         const code = data.code || res.status;
         M.toast({ html: `Failed: ${code}` });
 
         if (btnEl) {
-          if (code === 409) { // already claimed
+          if (code === 409) { 
+            claimedLocal.add(id);
             btnEl.textContent = 'Claimed';
-            btnEl.classList.add('disabled');
-            btnEl.onclick = null;
-          } else if (code === 410 || code === 400) { // expired
+          } else if (code === 410 || code === 400) { 
             btnEl.textContent = 'Expired';
-            btnEl.classList.add('disabled');
-            btnEl.onclick = null;
           } else {
+            
             btnEl.textContent = 'Claim';
             btnEl.classList.remove('disabled');
+            btnEl.removeAttribute('aria-disabled');
+            btnEl.style.pointerEvents = '';
+            btnEl.onclick = (e)=> claim(id, btnEl, e);
           }
         }
       }
@@ -407,10 +418,14 @@
       if (btnEl) {
         btnEl.textContent = 'Claim';
         btnEl.classList.remove('disabled');
+        btnEl.removeAttribute('aria-disabled');
+        btnEl.style.pointerEvents = '';
+        btnEl.onclick = (e)=> claim(id, btnEl, e);
       }
     } finally {
-
       await load();
+      if (selectedId === id) openMemo(id);
+      await refreshUnreadBadge(true);
     }
   }
 
@@ -438,6 +453,11 @@
     if (res.ok) {
       M.toast({ html: 'Created!' });
       page = 1;
+      ['to','subject','body','labels','expiresAt','attachmentJson'].forEach(id=>{
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      M.updateTextFields();
       await refreshUnreadBadge(true);
     } else {
       M.toast({ html: `Error: ${data.message || data.code || 'Failed to create memo'}` });
@@ -504,16 +524,20 @@
     el.innerHTML = chips.join('');
   }
 
-  async function deleteMemo(id){
-    const res = await fetch(API(`/memos/${id}`), { method:'DELETE', headers: getHeaders() });
-    if (res.ok) {
-      M.toast({ html: 'Deleted.' });
-      if (selectedId === id) { selectedId = null; renderDetailPlaceholder(); }
-      await refreshUnreadBadge(true);
-    } else {
-      M.toast({ html: 'Delete failed' });
-    }
-  }
+  function isExpired(m) {
+  return !!(m.expiresAt && new Date(m.expiresAt).getTime() <= Date.now());
+}
+function hasAttachment(m) {
+  return Array.isArray(m.attachments) ? m.attachments.length > 0 : !!m.attachments;
+}
+function isClaimed(m) {
+  // 陣列：全部已領；物件：claimed=true；或本地暫存（成功領取後先暫時標記）
+  const fromArray = Array.isArray(m.attachments) && m.attachments.length > 0
+    ? m.attachments.every(a => a?.claimed === true)
+    : false;
+  const fromObject = !!(m.attachments && m.attachments.claimed === true);
+  return fromArray || fromObject || claimedLocal.has(m._id);
+}
 
   // 先試後端 bulk，沒有就 fallback 逐一處理（依目前篩選條件分頁抓）
   async function claimAll(){
@@ -544,8 +568,34 @@
     M.toast({ html: `Claimed ${claimed}` });
     await load(); if (selectedId) openMemo(selectedId);
   }
+  
+  async function deleteMemo(id, ev){
+    if (ev) ev.stopPropagation();
+    if (!confirm('Delete this memo?')) return;
+    try {
+      
+      let res = await fetch(API(`/memos/${id}`), { method:'DELETE', headers: getHeaders() });
+      
+      if (!res.ok && (res.status === 404 || res.status === 405)) {
+        res = await fetch(API(`/memos/${id}/delete`), { method:'POST', headers: getHeaders(), body: JSON.stringify({}) });
+      }
 
-async function deleteRead(){
+      if (res.ok) {
+        M.toast({ html: 'Deleted.' });
+        if (selectedId === id) { selectedId = null; renderDetailPlaceholder(); }
+        await refreshUnreadBadge(true);
+        await load();
+      } else {
+        
+        const text = await res.text().catch(()=> '');
+        M.toast({ html: `Delete failed (${res.status}) ${text.slice(0,120)}` });
+      }
+    } catch (e) {
+      M.toast({ html: `Delete failed: ${e.message || e}` });
+    }
+  }
+
+  async function deleteRead(){
   try {
     const r = await fetch(API('/memos/delete-read'), { method:'DELETE', headers:getHeaders() });
     if (r.ok) { M.toast({html:'Deleted read memos'}); await refreshUnreadBadge(true); return; }
