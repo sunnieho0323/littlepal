@@ -27,7 +27,7 @@ app.set('io', io);
 
 // homepage (serves the static index.html)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // socket.io setup
