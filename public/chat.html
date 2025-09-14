@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Your Monster Cat - LittlePal</title>
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/chat.css">
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    
+    <div class="game-container">
+        <div class="cat-room">
+            <div class="cat-area">
+                <img 
+                    src="/img/monster_cat.png" 
+                    alt="Monster Cat" 
+                    class="cat-image"
+                    id="catImage"
+                >
+            </div>
+            
+            <div class="conversation-area" id="conversationArea">
+                <div class="speech-bubble cat">
+                    <p class="speech-text">
+                        👋 Oh great, another human who needs emotional support. Fine, I'll be your sassy therapy cat today. What's bothering you? 😏🐱
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input 
+            type="text" 
+            class="chat-input" 
+            id="messageInput" 
+            placeholder="Share your feelings with me..."
+            maxlength="500"
+        >
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            Send
+        </button>
+    </div>
+
+    <!-- Include Socket.IO client -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Include chat scripts -->
+    <script src="/js/chat/chat.api.js"></script>
+    <script src="/js/chat/chat.page.js"></script>
+</body>
+</html>

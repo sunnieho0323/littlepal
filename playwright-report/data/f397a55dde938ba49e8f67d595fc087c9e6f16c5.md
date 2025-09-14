@@ -1,0 +1,41 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - button "← Back" [ref=e2] [cursor=pointer]
+  - generic [ref=e4]:
+    - img "Monster Cat" [ref=e6]
+    - generic [ref=e7]:
+      - paragraph [ref=e9]: I am so happy and excited!
+      - paragraph [ref=e11]: Hello, I am feeling happy today!
+      - paragraph [ref=e13]: I'm here to listen to your feelings. How are you doing today? 🐱
+      - paragraph [ref=e15]: I'm glad to hear that you're feeling happy! What's bringing you joy today? 😊
+      - paragraph [ref=e17]: Hello, I am feeling happy today!
+      - paragraph [ref=e19]: I'm here to listen to your feelings. How are you doing today? 🐱
+      - paragraph [ref=e21]: Hello, I am feeling happy today!
+      - paragraph [ref=e23]: I am so happy and excited!
+      - paragraph [ref=e25]: I am so happy and excited!
+      - paragraph [ref=e27]: I'm glad to hear that you're feeling happy! What's bringing you joy today? 😊
+      - paragraph [ref=e29]: I'm glad to hear you're feeling happy and excited! It's wonderful to experience those positive emotions. What's making you feel this way? 😊
+      - paragraph [ref=e31]: I'm glad to hear you're feeling happy and excited! It's wonderful to have those moments of joy. 😊
+      - paragraph [ref=e33]: I am so happy and excited!
+      - paragraph [ref=e35]: Hello, I am feeling happy today!
+      - paragraph [ref=e37]: I'm glad to hear that you're feeling happy and excited! It's great to embrace those positive emotions. What's making you feel this way? 😊
+      - paragraph [ref=e39]: I'm glad to hear that you're feeling happy! What's bringing you joy today? 😊
+      - paragraph [ref=e41]: Hello, I am feeling happy today!
+      - paragraph [ref=e43]: I am so happy and excited!
+      - paragraph [ref=e45]: I'm glad to hear that you're feeling happy today! How wonderful to have moments of joy. What's making you feel this way? 😊
+      - paragraph [ref=e47]: I'm glad to hear that you're feeling happy and excited! It's great to embrace those positive emotions. What's making you feel this way? 😊
+      - paragraph [ref=e49]: Hello, I am feeling happy today!
+      - paragraph [ref=e51]: I am so happy and excited!
+      - paragraph [ref=e53]: I'm glad to hear that you're feeling happy today! What's bringing you joy right now? 😊
+      - paragraph [ref=e55]: I'm so happy to hear that you're feeling happy and excited! It's wonderful to embrace those positive feelings. What's bringing you this joy today? 😊
+      - paragraph [ref=e57]: Hello, I am feeling happy today!
+      - paragraph [ref=e59]: I am so happy and excited!
+      - paragraph [ref=e61]: I'm glad to hear that you're feeling happy and excited today! It's wonderful to embrace those positive emotions. What's making you feel this way? 😊
+      - paragraph [ref=e63]: I'm glad to hear that you're feeling happy today! What's bringing you joy right now? 😊
+      - paragraph [ref=e65]: I am so happy and excited!
+  - generic [ref=e71]:
+    - textbox "Share your feelings with me..." [disabled] [ref=e72]
+    - button "Sending..." [disabled] [ref=e73]
+```
