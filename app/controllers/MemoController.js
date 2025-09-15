@@ -147,23 +147,13 @@ module.exports = {
   },
 
   async update(req, res, next) {
-    try {
-      const uid = req.user.id;
-      const { id } = req.params;
-      const { unread, labels, archived } = req.body || {};
-      const $set = {};
-      if (typeof unread === 'boolean') $set.unread = unread;
-      if (Array.isArray(labels)) $set.labels = labels;
-      if (typeof archived === 'boolean') $set.archived = archived;
-
-      const doc = await Memo.findOneAndUpdate(
-        { _id: id, userId: uid, deletedAt: null },
-        { $set },
-        { new: true }
-      );
-      if (!doc) return res.status(404).json({ code: 'NOT_FOUND', message: 'memo not found' });
-      return res.json(doc);
-    } catch (e) { next(e); }
-  },
+  try {
+    const uid = req.user.id;
+    const { id } = req.params;
+    const { status, memo, error } = await MemoService.updateMemo(uid, id, req.body || {});
+    if (status !== 200) return res.status(status).json({ code: error || 'UPDATE_FAILED' });
+    return res.json(memo);
+  } catch (e) { next(e); }
+},
 
 };

@@ -145,9 +145,33 @@ async function claimAttachment(userId, memoId) {
   return { status: 200, result: { memoId, claimedAt: now } };
 }
 
+async function updateMemo(userId, memoId, patch = {}) {
+  const $set = {};
+  if (typeof patch.unread === 'boolean') $set.unread = patch.unread;
+  if (Array.isArray(patch.labels))       $set.labels = patch.labels;
+  if (typeof patch.archived === 'boolean') $set.archived = patch.archived;
+
+  if (!Object.keys($set).length) {
+    return { status: 400, error: 'NO_UPDATABLE_FIELDS' };
+  }
+
+  const doc = await Memo.findOneAndUpdate(
+    { _id: memoId, userId, deletedAt: null },
+    { $set },
+    { new: true, lean: true }
+  );
+
+  if (!doc) return { status: 404, error: 'NOT_FOUND' };
+
+  await createNotification(userId, 'memo.updated', { memoId });
+
+  return { status: 200, memo: doc };
+}
+
 module.exports = {
   createMemo,
   listMemos,
   getMemoByIdAndAutoRead,
   claimAttachment,
+  updateMemo, 
 };
