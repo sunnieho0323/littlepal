@@ -457,6 +457,8 @@ if (search) q.set('search', search);
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
+      M.toast({ html: to ? 'Sent to friend!' : 'Created!' });
+      await load(); // 送出後刷新列表
       M.updateTextFields();
       await refreshUnreadBadge(true);
     } else {

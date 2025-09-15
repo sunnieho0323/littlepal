@@ -37,11 +37,20 @@ module.exports = {
     return ok(res, memo);
   },
 
-  async list(req, res) {
-    const userId = req.user.id;
-    const q = req.query.q; if (q && !req.query.search) req.query.search = q;
-    const result = await MemoService.listMemos(userId, req.query);
-    return res.json(result);
+  async list(req, res, next) {
+    try {
+      const userId = req.user.id;
+
+      // normalize query
+      const q = { ...req.query };
+      if (q.q && !q.search) q.search = q.q;        // 支援 ?q=
+      q.page = Math.max(1, parseInt(q.page ?? '1', 10) || 1);
+      q.pageSize = Math.min(50, Math.max(1, parseInt(q.pageSize ?? '10', 10) || 10));
+      if (q.unread !== undefined) q.unread = (q.unread === 'true' || q.unread === true);
+
+      const result = await MemoService.listMemos(userId, q);
+      return res.json(result);
+    } catch (e) { next(e); }
   },
 
   async getById(req, res) {
@@ -51,21 +60,23 @@ module.exports = {
     return ok(res, memo);
   },
 
-  async claim(req, res) {
+  async claim(req, res, next) {
     try {
-      const { status, result, error } =
-        await MemoService.claimAttachment(req.user.id, req.params.id);
+      const uid = req.user.id;
+      const id = req.params.id;
+      const { status, result, error } = await MemoService.claimAttachment(uid, id);
 
       if (status !== 200) {
-        return res.status(status).json({ code: status, message: error || 'failed' });
+        // 對齊你前端處理：409/410/400 回 message/code
+        const msg = error || (status === 409 ? 'ALREADY_CLAIMED' :
+                              status === 410 ? 'MEMO_EXPIRED' :
+                              status === 404 ? 'NOT_FOUND' : 'BAD_REQUEST');
+        return res.status(status).json({ code: status, message: msg });
       }
-      // 正常情況下回傳：{ ok: true, memoId, claimedAt }
       return res.json({ ok: true, ...result });
-    } catch (e) {
-      // 萬一 Service 丟出未攔截錯誤
-      return res.status(500).json({ code: 500, message: e.message || 'internal error' });
-    }
+    } catch (e) { next(e); }
   },
+
 
   async claimAll(req, res) {
     const uid = req.user.id;
@@ -135,5 +146,24 @@ module.exports = {
     return res.json({ deleted: r.modifiedCount || 0 });
   },
 
+  async update(req, res, next) {
+    try {
+      const uid = req.user.id;
+      const { id } = req.params;
+      const { unread, labels, archived } = req.body || {};
+      const $set = {};
+      if (typeof unread === 'boolean') $set.unread = unread;
+      if (Array.isArray(labels)) $set.labels = labels;
+      if (typeof archived === 'boolean') $set.archived = archived;
+
+      const doc = await Memo.findOneAndUpdate(
+        { _id: id, userId: uid, deletedAt: null },
+        { $set },
+        { new: true }
+      );
+      if (!doc) return res.status(404).json({ code: 'NOT_FOUND', message: 'memo not found' });
+      return res.json(doc);
+    } catch (e) { next(e); }
+  },
 
 };

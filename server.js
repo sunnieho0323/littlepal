@@ -46,6 +46,19 @@ io.on('connection', (socket) => {
   });
 });
 
+// --- JSON error handler ---
+app.use((err, req, res, _next) => {
+  console.error(err);
+
+  const isCast = err?.name === 'CastError';
+  const status = isCast ? 400 : (err.status || 500);
+
+  res.status(status).json({
+    code: isCast ? 'BAD_ID' : (err.code || 'INTERNAL_ERROR'),
+    message: err.message || 'Internal Server Error'
+  });
+});
+
 // start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));

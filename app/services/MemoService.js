@@ -25,8 +25,10 @@ async function listMemos(userId, opts) {
     sort = 'createdAt',
     order = 'desc',
     includeExpired,
-    search
-  } = opts;
+  } = opts || {};
+
+  // ✅ 接受 q 或 search
+  const search = (opts?.search ?? opts?.q ?? '').toString().trim();
 
   const and = [{ userId, deletedAt: null }];
 
@@ -37,13 +39,14 @@ async function listMemos(userId, opts) {
   }
 
   if (label) and.push({ label });
+
   if (typeof unread !== 'undefined') {
     and.push({ unread: unread === 'true' || unread === true });
   }
 
-  // optional: minimal search by regex (subject/body)
+  // ✅ 最小全文搜尋（subject/body）
   if (search) {
-    const rx = new RegExp(String(search), 'i');
+    const rx = new RegExp(search, 'i');
     and.push({ $or: [{ subject: rx }, { body: rx }] });
   }
 
