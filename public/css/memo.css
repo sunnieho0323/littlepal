@@ -5,6 +5,11 @@ body {
 body.container { 
   max-width: 1080px; 
 }
+
+.mailbox-title {
+  margin-top: 0;
+}
+
 .list-toolbar { 
   display:flex; 
   justify-content:space-between; 
@@ -88,4 +93,88 @@ ul.pagination {
 .pagination li.is-disabled a {
   color: #bdbdbd !important;
   pointer-events: none;
+}
+
+
+/**/
+.room-card {
+  height: calc(100vh - 140px);  /* 扣掉 nav bar 和上下邊距 */
+  overflow: hidden;             /* 不讓整頁出 scrollbar */
+  display: flex;
+  flex-direction: column;
+}
+
+.two-col {
+  overflow: hidden;
+}
+
+.left-col, .right-col {
+  overflow-y: auto;   /* 只在左右欄內部滾動 */
+}
+
+.two-col {
+  display: flex;
+  gap: 16px;          /* 左右間距 */
+}
+
+.left-col {
+  flex: 0 0 51%;
+}
+
+.right-col {
+  flex: 1;
+}
+
+/**/
+
+
+/* --- Monster Cat follow eyes --- */
+.pet-follow { 
+  margin-top: 0px; 
+  display: grid; 
+  place-items: center; 
+}
+
+.pet-wrap {
+  position: relative;
+  width: min(180px, 70%);           /* 自適應寬度 */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.cat-follow { width: 100%; display: block; }
+
+/* 眼睛中心（用百分比鎖定位置，方便不同解析度） */
+.eye {
+  --eye-size: 32px;                 /* 眼白區可碰撞的範圍（只是定位用） */
+  --pupil-size: 14px;               /* 瞳孔大小 */
+  --pupil-move: 10px;                /* 瞳孔最大位移半徑（像素） */
+
+  position: absolute;
+  width: var(--eye-size);
+  height: var(--eye-size);
+  transform: translate(-50%, -50%); /* 以中心點對齊 */
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 兩眼的基準位置（依圖片調整百分比即可） */
+.eye-left  { left: 30%; top: 70%; } /* ← 微調這兩行就能完美對位 */
+.eye-right { left: 70%; top: 65%; }
+
+/* 瞳孔 */
+.pupil {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: var(--pupil-size);
+  height: var(--pupil-size);
+  border-radius: 50%;
+  background: #1a1a1a;
+  box-shadow: 0 0 0 2px #00000020 inset;
+  transform: translate(-50%, -50%);
+  transition: transform 60ms linear;   /* 平滑一點 */
+}
+
+/* 盡量尊重使用者的減少動效設定 */
+@media (prefers-reduced-motion: reduce) {
+  .pupil { transition: none; }
 }

@@ -51,7 +51,17 @@
   <div class="container">
     <div class="room-card z-depth-1">
 
-      <h5 style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+                      <!-- Pet: eyes follow the cursor -->
+      <div class="pet-follow">
+        <div class="pet-wrap">
+          <img src="/img/monster_cat_noeyeball.png" alt="Monster Cat" class="cat-follow" />
+          <!-- 左右眼白的中心點（我們只畫瞳孔，覆蓋在原圖眼白上） -->
+          <div class="eye eye-left"><div class="pupil"></div></div>
+          <div class="eye eye-right"><div class="pupil"></div></div>
+        </div>
+      </div>
+
+      <h5 class="mailbox-title" style="display:flex; align-items:center; justify-content:space-between; gap:12px">
         <span>Mailbox</span>
         <span id="unreadBadge" class="new badge" data-badge-caption="Unread">0</span>
       </h5>
@@ -105,7 +115,7 @@
             <li id="nextLi" class="waves-effect"><a href="#!" id="next">Next</a></li>
           </ul>
         </div>
-
+        
         <div class="right-col" id="detailPanel">
           <p class="grey-text">Select a mail to view details</p>
         </div>
@@ -696,7 +706,61 @@
         function parseJsonOrNull(s){ try{ return s?JSON.parse(s):null }catch(_){ return null } }
         function debounce(fn, delay){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(this,a),delay); }; }
       </script>
+
+      <script>
+        // 讓怪獸貓的眼睛跟隨滑鼠
+        (function () {
+          const wrap = document.querySelector('.pet-wrap');
+          if (!wrap) return;
+
+          const eyes = Array.from(wrap.querySelectorAll('.eye'));
+
+          // 計算並限制位移在半徑內
+          function movePupil(e) {
+            const rect = wrap.getBoundingClientRect();
+            const mouseX = (e.touches?.[0]?.clientX ?? e.clientX) - rect.left;
+            const mouseY = (e.touches?.[0]?.clientY ?? e.clientY) - rect.top;
+
+            eyes.forEach(eye => {
+              const pupil = eye.querySelector('.pupil');
+              if (!pupil) return;
+
+              // 眼睛中心（相對於 wrap）
+              const eyeRect = eye.getBoundingClientRect();
+              const cx = eyeRect.left - rect.left + eyeRect.width / 2;
+              const cy = eyeRect.top  - rect.top  + eyeRect.height / 2;
+
+              // 指向向量
+              let dx = mouseX - cx;
+              let dy = mouseY - cy;
+
+              // 限制最大位移（半徑）
+              const r = parseFloat(getComputedStyle(eye).getPropertyValue('--pupil-move')) || 8;
+              const len = Math.hypot(dx, dy) || 1;
+              const ux = dx / len, uy = dy / len;
+              const tx = Math.min(len, r) * ux;
+              const ty = Math.min(len, r) * uy;
+
+              // 以瞳孔自身中心為基準做位移
+              pupil.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px))`;
+            });
+          }
+
+          // 滑鼠、觸控皆支援
+          document.addEventListener('mousemove', movePupil);
+          document.addEventListener('touchmove', movePupil, { passive: true });
+
+          // 離開區域時回到中心
+          wrap.addEventListener('mouseleave', () => {
+            wrap.querySelectorAll('.pupil').forEach(p => {
+              p.style.transform = 'translate(-50%, -50%)';
+            });
+          });
+        })();
+      </script>
+
     </div>
+
   </div>
 </body>
 </html>
