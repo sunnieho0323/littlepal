@@ -241,6 +241,40 @@ function goBack() {
     window.location.href = '/';
 }
 
+// Clear chat function
+async function clearChat() {
+    if (confirm('Are you sure you want to clear all chat history? This action cannot be undone.')) {
+        try {
+            const result = await ChatAPI.clearChat();
+            if (result.ok) {
+                // Clear the conversation area and show welcome message
+                const conversationArea = document.getElementById('conversationArea');
+                conversationArea.innerHTML = `
+                    <div class="speech-bubble cat">
+                        <p class="speech-text">
+                            👋 Chat cleared! Ready for a fresh start? What's on your mind today? 😏🐱
+                        </p>
+                    </div>
+                `;
+                
+                // Reset cat image to default
+                const catImage = document.getElementById('catImage');
+                if (catImage) {
+                    catImage.src = '/img/monster_cat.png';
+                }
+                
+                console.log('Chat cleared successfully');
+            } else {
+                console.error('Failed to clear chat:', result.error);
+                alert('Failed to clear chat. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error clearing chat:', error);
+            alert('Error clearing chat. Please try again.');
+        }
+    }
+}
+
 // Initialize chat page when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new ChatPage();
