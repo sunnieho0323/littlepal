@@ -6,7 +6,7 @@ function baseFilter(userId) {
   return {
     userId,
     deletedAt: null,
-    $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }], // 過期自動過濾
+    $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
   };
 }
 
@@ -169,6 +169,7 @@ async function updateMemo(userId, memoId, patch = {}) {
 }
 
 module.exports = {
+  baseFilter,
   createMemo,
   listMemos,
   getMemoByIdAndAutoRead,

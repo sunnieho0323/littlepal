@@ -9,13 +9,14 @@ router.use(requireAuth);
 router.post('/claim-all', MemoController.claimAll);
 router.delete('/delete-read', MemoController.deleteRead);
 
-router.post('/', MemoController.create);
 router.get('/', MemoController.list);
+router.post('/', MemoController.create);
+router.get('/:id', MemoController.getById);
 router.patch('/:id', MemoController.update);
-router.get('/:id', MemoController.getById);           
+router.delete('/:id', MemoController.remove);
 router.post('/:id/claim', MemoController.claim);
 router.post('/send', MemoController.send);
-router.delete('/:id', MemoController.remove);
+
 
 
 module.exports = router;

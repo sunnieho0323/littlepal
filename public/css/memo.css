@@ -1,3 +1,7 @@
+body {
+  background: none;
+}
+
 body.container { 
   max-width: 1080px; 
 }

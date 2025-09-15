@@ -1,15 +1,5 @@
 // app/controllers/MemoController.js
 
-/*
-const MemoService = require('../services/MemoService');
-exports.list = async (req,res,next)=>{ try{ res.json(await MemoService.list(req.user?.id)); }catch(e){next(e);} };
-exports.create = async (req,res,next)=>{ try{ res.status(201).json(await MemoService.create(req.user?.id, req.body)); }catch(e){next(e);} };
-exports.update = async (req,res,next)=>{ try{ res.json(await MemoService.update(req.user?.id, req.params.id, req.body)); }catch(e){next(e);} };
-exports.remove = async (req,res,next)=>{ try{ await MemoService.remove(req.user?.id, req.params.id); res.sendStatus(204);}catch(e){next(e);} };
-exports.complete = async (req,res,next)=>{ try{ res.json(await MemoService.complete(req.user?.id, req.params.id)); }catch(e){next(e);} };
-exports.notify = async (req,res,next)=>{ try{ res.json(await MemoService.notify(req.user?.id, req.params.id)); }catch(e){next(e);} };
-*/
-
 const mongoose = require('mongoose');
 const MemoService = require('../services/MemoService');
 const Memo = require('../../models/Memo');
@@ -20,22 +10,6 @@ function err(res, status, code, message) {
 }
 
 module.exports = {
-  async create(req, res) {
-    const userId = req.user.id;
-    const { subject, body, label, attachments, expiresAt } = req.body || {};
-
-    if (!subject) return err(res, 400, 'VALIDATION_ERROR', 'subject is required');
-    if (expiresAt && isNaN(new Date(expiresAt))) return err(res, 400, 'VALIDATION_ERROR', 'invalid expiresAt');
-
-    const memo = await MemoService.createMemo(userId, {
-      subject: String(subject),
-      body: body || '',
-      label: label || 'inbox',
-      attachments: Array.isArray(attachments) ? attachments : (attachments ? [attachments] : []),
-      expiresAt: expiresAt ? new Date(expiresAt) : null,
-    });
-    return ok(res, memo);
-  },
 
   async list(req, res, next) {
     try {
@@ -53,74 +27,37 @@ module.exports = {
     } catch (e) { next(e); }
   },
 
+  async create(req, res) {
+    const userId = req.user.id;
+    const { subject, body, label, attachments, expiresAt } = req.body || {};
+
+    if (!subject) return err(res, 400, 'VALIDATION_ERROR', 'subject is required');
+    if (expiresAt && isNaN(new Date(expiresAt))) return err(res, 400, 'VALIDATION_ERROR', 'invalid expiresAt');
+
+    const memo = await MemoService.createMemo(userId, {
+      subject: String(subject),
+      body: body || '',
+      label: label || 'inbox',
+      attachments: Array.isArray(attachments) ? attachments : (attachments ? [attachments] : []),
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
+    });
+    return ok(res, memo);
+  },
+
   async getById(req, res) {
     const userId = req.user.id;
     const { status, memo, error } = await MemoService.getMemoByIdAndAutoRead(userId, req.params.id);
     if (status !== 200) return err(res, status, error);
     return ok(res, memo);
   },
-
-  async claim(req, res, next) {
+  
+  async update(req, res, next) {
     try {
       const uid = req.user.id;
-      const id = req.params.id;
-      const { status, result, error } = await MemoService.claimAttachment(uid, id);
-
-      if (status !== 200) {
-        // 對齊你前端處理：409/410/400 回 message/code
-        const msg = error || (status === 409 ? 'ALREADY_CLAIMED' :
-                              status === 410 ? 'MEMO_EXPIRED' :
-                              status === 404 ? 'NOT_FOUND' : 'BAD_REQUEST');
-        return res.status(status).json({ code: status, message: msg });
-      }
-      return res.json({ ok: true, ...result });
-    } catch (e) { next(e); }
-  },
-
-
-  async claimAll(req, res) {
-    const uid = req.user.id;
-    const now = new Date();
-
-    const r = await Memo.updateMany(
-      {
-        userId: uid,
-        deletedAt: null,
-        'attachments.claimed': false,
-        $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }]
-      },
-      {
-        $set: {
-          unread: false,
-          'attachments.$[a].claimed': true,
-          'attachments.$[a].claimedAt': now
-        }
-      },
-      { arrayFilters: [{ 'a.claimed': false }] }
-    );
-
-    return res.json({ claimed: r.modifiedCount || 0 });
-  },
-
-  async send(req, res, next) {
-    try {
-      const { recipientId, subject, body, label, attachments, expiresAt } = req.body || {};
-      if (!recipientId) return err(res, 400, 'VALIDATION_ERROR', 'recipientId is required');
-      if (!mongoose.isValidObjectId(recipientId)) return err(res, 400, 'VALIDATION_ERROR', 'recipientId must be ObjectId');
-      if (!subject) return err(res, 400, 'VALIDATION_ERROR', 'subject is required');
-      if (expiresAt && isNaN(new Date(expiresAt))) return err(res, 400, 'VALIDATION_ERROR', 'invalid expiresAt');
-
-      const memo = await MemoService.createMemo(
-        new mongoose.Types.ObjectId(recipientId),
-        {
-          subject: String(subject),
-          body: body || '',
-          label: label || 'inbox',
-          attachments: Array.isArray(attachments) ? attachments : (attachments ? [attachments] : []),
-          expiresAt: expiresAt ? new Date(expiresAt) : null,
-        }
-      );
-      return ok(res, memo);
+      const { id } = req.params;
+      const { status, memo, error } = await MemoService.updateMemo(uid, id, req.body || {});
+      if (status !== 200) return res.status(status).json({ code: error || 'UPDATE_FAILED' });
+      return res.json(memo);
     } catch (e) { next(e); }
   },
 
@@ -146,14 +83,67 @@ module.exports = {
     return res.json({ deleted: r.modifiedCount || 0 });
   },
 
-  async update(req, res, next) {
-  try {
+  async send(req, res, next) {
+    try {
+      const { recipientId, subject, body, label, attachments, expiresAt } = req.body || {};
+      if (!recipientId) return err(res, 400, 'VALIDATION_ERROR', 'recipientId is required');
+      if (!mongoose.isValidObjectId(recipientId)) return err(res, 400, 'VALIDATION_ERROR', 'recipientId must be ObjectId');
+      if (!subject) return err(res, 400, 'VALIDATION_ERROR', 'subject is required');
+      if (expiresAt && isNaN(new Date(expiresAt))) return err(res, 400, 'VALIDATION_ERROR', 'invalid expiresAt');
+
+      const memo = await MemoService.createMemo(
+        new mongoose.Types.ObjectId(recipientId),
+        {
+          subject: String(subject),
+          body: body || '',
+          label: label || 'inbox',
+          attachments: Array.isArray(attachments) ? attachments : (attachments ? [attachments] : []),
+          expiresAt: expiresAt ? new Date(expiresAt) : null,
+        }
+      );
+      return ok(res, memo);
+    } catch (e) { next(e); }
+  },
+
+  async claim(req, res, next) {
+    try {
+      const uid = req.user.id;
+      const id = req.params.id;
+      const { status, result, error } = await MemoService.claimAttachment(uid, id);
+
+      if (status !== 200) {
+        // 對齊你前端處理：409/410/400 回 message/code
+        const msg = error || (status === 409 ? 'ALREADY_CLAIMED' :
+                              status === 410 ? 'MEMO_EXPIRED' :
+                              status === 404 ? 'NOT_FOUND' : 'BAD_REQUEST');
+        return res.status(status).json({ code: status, message: msg });
+      }
+      return res.json({ ok: true, ...result });
+    } catch (e) { next(e); }
+  },
+
+  async claimAll(req, res) {
     const uid = req.user.id;
-    const { id } = req.params;
-    const { status, memo, error } = await MemoService.updateMemo(uid, id, req.body || {});
-    if (status !== 200) return res.status(status).json({ code: error || 'UPDATE_FAILED' });
-    return res.json(memo);
-  } catch (e) { next(e); }
-},
+    const now = new Date();
+
+    const r = await Memo.updateMany(
+      {
+        userId: uid,
+        deletedAt: null,
+        'attachments.claimed': false,
+        $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }]
+      },
+      {
+        $set: {
+          unread: false,
+          'attachments.$[a].claimed': true,
+          'attachments.$[a].claimedAt': now
+        }
+      },
+      { arrayFilters: [{ 'a.claimed': false }] }
+    );
+
+    return res.json({ claimed: r.modifiedCount || 0 });
+  },
 
 };
