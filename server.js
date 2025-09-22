@@ -5,6 +5,13 @@ const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
+// Validate required environment variables
+if (!process.env.OPENAI_API_KEY) {
+  console.error('❌ OPENAI_API_KEY is required but not set in environment variables');
+  console.log('💡 Please create a .env file with your OpenAI API key');
+  process.exit(1);
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
