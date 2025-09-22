@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
+- generic [ref=e1]:
   - button "← Back" [ref=e2] [cursor=pointer]
   - generic [ref=e4]:
     - img "Monster Cat" [ref=e6]
@@ -46,7 +46,7 @@
       - paragraph [ref=e83]: Oh, feeling a little down in the dumps, huh? It's okay to have those gloomy days. Tell me what's on your mind, I'm here to listen. 😿💕
       - paragraph [ref=e85]: Oh, look at you all excited and ready to relax! Just don't forget to pack some relaxation and self-care in that suitcase of yours. Enjoy every moment of your well-deserved vacation! 😸💕
   - generic [ref=e86]:
-    - textbox "Share your feelings with me..." [ref=e87]
+    - textbox "Share your feelings with me..." [active] [ref=e87]: I am happy!
     - button "Send" [ref=e88] [cursor=pointer]
     - button "Clear Chat" [ref=e89] [cursor=pointer]
 ```

@@ -45,8 +45,9 @@
       - paragraph [ref=e81]: I feel really sad and lonely today
       - paragraph [ref=e83]: Oh, feeling a little down in the dumps, huh? It's okay to have those gloomy days. Tell me what's on your mind, I'm here to listen. 😿💕
       - paragraph [ref=e85]: Oh, look at you all excited and ready to relax! Just don't forget to pack some relaxation and self-care in that suitcase of yours. Enjoy every moment of your well-deserved vacation! 😸💕
-  - generic [ref=e86]:
-    - textbox "Share your feelings with me..." [ref=e87]
-    - button "Send" [ref=e88] [cursor=pointer]
-    - button "Clear Chat" [ref=e89] [cursor=pointer]
+      - paragraph [ref=e87]: I am feeling really stressed and overwhelmed
+  - generic [ref=e93]:
+    - textbox "Share your feelings with me..." [disabled] [ref=e94]
+    - button "Sending..." [disabled] [ref=e95]
+    - button "Clear Chat" [ref=e96] [cursor=pointer]
 ```

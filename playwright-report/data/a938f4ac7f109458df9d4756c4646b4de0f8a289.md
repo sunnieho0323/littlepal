@@ -41,12 +41,9 @@
       - paragraph [ref=e73]: Oh, riding that happiness wave, are we? Well, don't forget to share some of that joy with the rest of us! What's got you all giddy and thrilled today? 😸💕
       - paragraph [ref=e75]: Oh, you're trying to change the subject on me, huh? Nice try, but let's focus on your feelings instead. What's really going on in that human heart of yours? 😼💕
       - paragraph [ref=e77]: I am feeling anxious and worried about tomorrow
-      - paragraph [ref=e79]: I am so excited about my vacation!
-      - paragraph [ref=e81]: I feel really sad and lonely today
-      - paragraph [ref=e83]: Oh, feeling a little down in the dumps, huh? It's okay to have those gloomy days. Tell me what's on your mind, I'm here to listen. 😿💕
-      - paragraph [ref=e85]: Oh, look at you all excited and ready to relax! Just don't forget to pack some relaxation and self-care in that suitcase of yours. Enjoy every moment of your well-deserved vacation! 😸💕
-  - generic [ref=e86]:
-    - textbox "Share your feelings with me..." [ref=e87]
-    - button "Send" [ref=e88] [cursor=pointer]
-    - button "Clear Chat" [ref=e89] [cursor=pointer]
+      - paragraph [ref=e79]: I feel really sad and lonely today
+  - generic [ref=e85]:
+    - textbox "Share your feelings with me..." [disabled] [ref=e86]
+    - button "Sending..." [disabled] [ref=e87]
+    - button "Clear Chat" [ref=e88] [cursor=pointer]
 ```

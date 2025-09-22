@@ -20,18 +20,8 @@
       - paragraph [ref=e31]: I am so happy and excited today!
       - paragraph [ref=e33]: I am feeling anxious and worried about tomorrow
       - paragraph [ref=e35]: I feel really sad and lonely today
-      - paragraph [ref=e37]: Oh, asking about me now? Don't worry, I'm here to listen to your drama, not mine. What's on your mind? 😼💕
-      - paragraph [ref=e39]: Oh, great, more happiness. Must be contagious or something. But hey, I guess I'll indulge you this time. What's got you feeling like you've got extra lives? 😼💕
-      - paragraph [ref=e41]: I am so excited about my vacation!
-      - paragraph [ref=e43]: I am feeling really stressed and overwhelmed
-      - paragraph [ref=e45]: Oh, honey, I can practically hear your heart racing from here. Take a deep breath and remember, you've conquered tough days before. You've got this! 😼💕
-      - paragraph [ref=e47]: Oh, look at you feeling all sad and lonely. Don't worry, I'm here to keep you company. What's weighing on your heart today? 😿💕
-      - paragraph [ref=e49]: Oh, feeling like you've got a hairball stuck in your throat, huh? It's okay to feel overwhelmed. Let's tackle these feelings together. 😼💕
-      - paragraph [ref=e51]: Oh, look at you all excited! Must be nice to have something to look forward to. Where are you off to? 😸💕
-      - paragraph [ref=e53]: Hello, I am feeling happy today!
-      - paragraph [ref=e55]: I am so happy and excited!
-  - generic [ref=e56]:
-    - textbox "Share your feelings with me..." [ref=e57]
-    - button "Send" [ref=e58] [cursor=pointer]
-    - button "Clear Chat" [ref=e59] [cursor=pointer]
+  - generic [ref=e41]:
+    - textbox "Share your feelings with me..." [disabled] [ref=e42]
+    - button "Sending..." [disabled] [ref=e43]
+    - button "Clear Chat" [ref=e44] [cursor=pointer]
 ```

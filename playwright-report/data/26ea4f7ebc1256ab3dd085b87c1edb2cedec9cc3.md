@@ -45,8 +45,20 @@
       - paragraph [ref=e81]: I feel really sad and lonely today
       - paragraph [ref=e83]: Oh, feeling a little down in the dumps, huh? It's okay to have those gloomy days. Tell me what's on your mind, I'm here to listen. 😿💕
       - paragraph [ref=e85]: Oh, look at you all excited and ready to relax! Just don't forget to pack some relaxation and self-care in that suitcase of yours. Enjoy every moment of your well-deserved vacation! 😸💕
-  - generic [ref=e86]:
-    - textbox "Share your feelings with me..." [ref=e87]
-    - button "Send" [ref=e88] [cursor=pointer]
-    - button "Clear Chat" [ref=e89] [cursor=pointer]
+      - paragraph [ref=e87]: Oh, sweet human, the anxiety monster strikes again, huh? Take a deep breath and remember, you've survived 100% of your worst days. Tomorrow's got nothing on you! 😼💕
+      - paragraph [ref=e89]: I am feeling really stressed and overwhelmed
+      - paragraph [ref=e91]: Hello, I am feeling happy today!
+      - paragraph [ref=e93]: Double trouble, huh? It's like stress and overwhelm decided to throw a party in your mind! Take a deep breath, tackle one thing at a time, and remember, you're stronger than you think. 😼💕
+      - paragraph [ref=e95]: I am so happy and excited!
+      - paragraph [ref=e97]: Two doses of happy and excited in a row? Someone's riding that positivity train! Keep that energy up and spread those good vibes around like glitter. You're glowing, darling! 😸💕
+      - paragraph [ref=e99]: Oh, riding that happiness wave, are we? Well, don't forget to share some of that joy with the rest of us! What's got you all giddy and thrilled today? 😸💕
+      - paragraph [ref=e101]: I am feeling happy today!
+      - paragraph [ref=e103]: Oh, feeling happy today? Well, aren't you just a ray of sunshine! Keep spreading that positivity around like confetti. Shine on, you bright little star! 😸💕
+      - paragraph [ref=e105]: I feel sad
+      - paragraph [ref=e107]: How are you?
+      - paragraph [ref=e109]: I am so happy and excited today!
+  - generic [ref=e115]:
+    - textbox "Share your feelings with me..." [disabled] [ref=e116]
+    - button "Sending..." [disabled] [ref=e117]
+    - button "Clear Chat" [ref=e118] [cursor=pointer]
 ```
