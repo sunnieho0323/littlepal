@@ -21,6 +21,8 @@ app.use('/api/auth', require('./app/routes/auth.routes'));
 app.use('/api/memos', require('./app/routes/memos.routes'));
 app.use('/api/pet', require('./app/routes/pet.routes'));
 app.use('/api/chat', require('./app/routes/chat.routes'));
+app.use('/api/notifications', require('./app/routes/notifications.routes'));
+
 
 // make io available inside req.app
 app.set('io', io);
@@ -41,6 +43,19 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('❌ Client disconnected:', socket.id);
+  });
+});
+
+// --- JSON error handler ---
+app.use((err, req, res, _next) => {
+  console.error(err);
+
+  const isCast = err?.name === 'CastError';
+  const status = isCast ? 400 : (err.status || 500);
+
+  res.status(status).json({
+    code: isCast ? 'BAD_ID' : (err.code || 'INTERNAL_ERROR'),
+    message: err.message || 'Internal Server Error'
   });
 });
 
