@@ -16,8 +16,12 @@ export function toast(msg) {
 
 // Token / user information（Owen login page localStorage）
 export function getUser() {
-  try { return JSON.parse(localStorage.getItem('user') || 'null'); }
-  catch { return null; }
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (user) return user;
+    const lp = localStorage.getItem('lp_user');
+    return lp ? { email: lp } : null;
+  } catch { return null; }
 }
 export function getToken() { return localStorage.getItem('token'); }
 export function setAuth({ user, token }) {
@@ -27,6 +31,7 @@ export function setAuth({ user, token }) {
 export function logout() {
   localStorage.removeItem('user');
   localStorage.removeItem('token');
+  localStorage.removeItem('lp_user');
   location.href = '/login.html'; // Owen after logout go to login page
 }
 

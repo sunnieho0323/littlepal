@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Little Pal — Login</title>
   <link rel="stylesheet" href="/css/login.css">
+  <script>
+    (function () {
+      // If already logged in, go to homepage
+      try {
+        if (localStorage.getItem('lp_user')) {
+          location.href = '/index.html';
+        }
+      } catch (_) {}
+    })();
+  </script>
 </head>
 <body>
   <main class="wrap">
