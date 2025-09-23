@@ -36,7 +36,7 @@ export function logout() {
 }
 
 // index avatar show user info
-(function initAvatar() {
+function renderAvatar() {
   const user = getUser();
   const avatarImg = document.getElementById('avatar-img');
   const avatarText = document.getElementById('avatar-text');
@@ -45,18 +45,19 @@ export function logout() {
   if (logoutBtn) logoutBtn.addEventListener('click', logout);
 
   if (!user) {
-    // not login -> go to login page (or stay here for Owen testing)
-    avatarText && (avatarText.textContent = 'Guest');
+    if (avatarText) avatarText.textContent = 'Guest';
     return;
   }
 
-  // if user.avatar show image, else show initial
-  if (user.avatarUrl) {
-    avatarImg.src = user.avatarUrl;
-    avatarText.textContent = user.name || user.email;
-  } else {
-    avatarImg.style.display = 'none';
-    const initial = (user.name || user.email || '?').charAt(0).toUpperCase();
-    avatarText.textContent = initial + ' · ' + (user.name || user.email);
+  const fallbackUrl = '/img/monster_cat.png';
+  const url = user.avatarUrl || fallbackUrl;
+  if (avatarImg) {
+    avatarImg.style.display = '';
+    avatarImg.src = url;
   }
-})();
+  if (avatarText) avatarText.textContent = user.name || user.email;
+}
+
+// Render on DOM ready and also when header partial has been injected
+document.addEventListener('DOMContentLoaded', renderAvatar);
+document.addEventListener('site-header:ready', renderAvatar);

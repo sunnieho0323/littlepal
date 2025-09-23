@@ -11,41 +11,13 @@
   <link rel="stylesheet" href="css/memo.css">
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script>
+    (function(){ try{ if(!localStorage.getItem('lp_user')) location.href='/login.html'; }catch(_){} })();
+  </script>
 </head>
 <body class="littlepal-room">
-  <!-- Top Nav -->
-      <nav class="white z-depth-0">
-        <div class="nav-wrapper container">
-          <a href="/" class="brand-logo black-text" data-testid="brand">
-            <i class="material-icons">pets</i> LittlePal
-          </a>
-
-          <ul class="right">
-            <!-- User avatar / menu -->
-            <li>
-              <a
-                class="dropdown-trigger"
-                href="#!"
-                data-target="user-menu"
-                id="user-avatar"
-                data-testid="user-avatar"
-              >
-                <!-- hide img:
-                <img class="circle avatar" id="avatar-img" alt="user" />-->
-                <span id="avatar-text" class="black-text"></span>
-                <i class="material-icons right">arrow_drop_down</i>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-
-  <!-- Dropdown content -->
-      <ul id="user-menu" class="dropdown-content">
-        <li><a id="menu-profile" href="#!" class="black-text">Profile</a></li>
-        <li class="divider" tabindex="-1"></li>
-        <li><a id="menu-logout" href="#!" class="red-text" data-testid="logout-btn">Logout</a></li>
-      </ul>
+  <!-- Shared Header -->
+  <div id="site-header"></div>
       
   <!--memo feature-->    
   <div class="container">
@@ -140,6 +112,23 @@
       <!--materialize CSS-->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
       
+      <!-- Common app (avatar/user + logout) -->
+      <script type="module" src="/js/common/app.js"></script>
+      <script type="module" src="/js/common/socket.client.js"></script>
+      <script type="module" src="/js/common/header.js"></script>
+
+      <!-- Back to Dashboard (unified) -->
+      <script>
+        (function(){
+          const container = document.querySelector('.container');
+          if (container) {
+            const back = document.createElement('div');
+            back.innerHTML = '<a href="/" class="back-link"><i class="material-icons" style="vertical-align: middle">arrow_back</i> Back to Dashboard</a>';
+            back.style.marginTop = '12px';
+            container.prepend(back);
+          }
+        })();
+      </script>
       <script src="/socket.io/socket.io.js"></script>
       <script type="module" src="/js/common/app.js"></script>
       <script type="module" src="/js/common/socket.client.js"></script>
