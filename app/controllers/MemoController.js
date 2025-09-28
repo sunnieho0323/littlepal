@@ -3,6 +3,7 @@
 const mongoose = require('mongoose');
 const MemoService = require('../services/MemoService');
 const Memo = require('../../models/Memo');
+const User = require('../models/User');
 
 function ok(res, data) { return res.json(data); }
 function err(res, status, code, message) {
@@ -85,22 +86,29 @@ module.exports = {
 
   async send(req, res, next) {
     try {
-      const { recipientId, subject, body, label, attachments, expiresAt } = req.body || {};
-      if (!recipientId) return err(res, 400, 'VALIDATION_ERROR', 'recipientId is required');
-      if (!mongoose.isValidObjectId(recipientId)) return err(res, 400, 'VALIDATION_ERROR', 'recipientId must be ObjectId');
+      let { recipientId, recipientEmail, subject, body, label, attachments, expiresAt } = req.body || {};
+      if (!recipientId && !recipientEmail) {
+        return err(res, 400, 'VALIDATION_ERROR', 'recipientId or recipientEmail is required');
+      }
       if (!subject) return err(res, 400, 'VALIDATION_ERROR', 'subject is required');
       if (expiresAt && isNaN(new Date(expiresAt))) return err(res, 400, 'VALIDATION_ERROR', 'invalid expiresAt');
 
-      const memo = await MemoService.createMemo(
-        new mongoose.Types.ObjectId(recipientId),
-        {
-          subject: String(subject),
-          body: body || '',
-          label: label || 'inbox',
-          attachments: Array.isArray(attachments) ? attachments : (attachments ? [attachments] : []),
-          expiresAt: expiresAt ? new Date(expiresAt) : null,
-        }
-      );
+      if (!recipientId && recipientEmail) {
+        const user = await User.findOne({ email: recipientEmail.toLowerCase() }, { _id: 1 }).lean();
+        if (!user) return err(res, 404, 'USER_NOT_FOUND', 'recipient email not found');
+        recipientId = user._id.toString();
+      }
+      if (!mongoose.isValidObjectId(recipientId)) {
+        return err(res, 400, 'VALIDATION_ERROR', 'recipientId must be ObjectId');
+      }
+
+      const memo = await MemoService.createMemo(new mongoose.Types.ObjectId(recipientId), {
+        subject: String(subject),
+        body: body || '',
+        label: label || 'inbox',
+        attachments: Array.isArray(attachments) ? attachments : (attachments ? [attachments] : []),
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+      });
       return ok(res, memo);
     } catch (e) { next(e); }
   },

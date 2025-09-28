@@ -147,9 +147,9 @@ async function claimAttachment(userId, memoId) {
 
 async function updateMemo(userId, memoId, patch = {}) {
   const $set = {};
-  if (typeof patch.unread === 'boolean') $set.unread = patch.unread;
-  if (Array.isArray(patch.labels))       $set.labels = patch.labels;
-  if (typeof patch.archived === 'boolean') $set.archived = patch.archived;
+  if (typeof patch.unread === 'boolean')      $set.unread = patch.unread;
+  if (typeof patch.label === 'string')        $set.label  = patch.label;
+  if (typeof patch.archived === 'boolean')    $set.archived = patch.archived;
 
   if (!Object.keys($set).length) {
     return { status: 400, error: 'NO_UPDATABLE_FIELDS' };

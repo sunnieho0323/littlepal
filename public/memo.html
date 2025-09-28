@@ -97,7 +97,7 @@
       <div id="createModal" class="modal">
         <div class="modal-content">
           <h5 id="modalTitle">New Memo</h5>
-          <div class="input-field"><input id="to" placeholder="Recipient UserId (optional/for send)"/></div>
+          <div class="input-field"><input id="toEmail" type="email" placeholder="Recipient Email (e.g. friend@example.com)"/><span class="helper-text">User Email</span></div>
           <div class="input-field"><input id="subject" placeholder="Subject" required/></div>
           <div class="input-field"><textarea id="body" class="materialize-textarea" placeholder="Body"></textarea></div>
           <div class="input-field"><input id="labels" placeholder="Labels (comma separated)"/></div>
@@ -301,8 +301,7 @@
             unreadAbort = new AbortController();
 
             const candidates = [
-              '/memos?unread=true&limit=1&page=1',
-              '/memos?status=unread&limit=1&page=1'
+              '/memos?unread=true&page=1&pageSize=1'
             ];
             for (const path of candidates) {
               const res = await fetch(API(path), { headers: getHeaders(), signal: unreadAbort.signal });
@@ -497,41 +496,48 @@
         }
 
         async function submitMemo() {
-          const to = document.getElementById('to').value.trim();
-          const subject = document.getElementById('subject').value.trim();
-          const bodyText = document.getElementById('body').value.trim();
-          const labelsArr = document.getElementById('labels').value.split(',').map(s=>s.trim()).filter(Boolean);
-          const expiresVal = document.getElementById('expiresAt').value;
-          const attOne = parseJsonOrNull(document.getElementById('attachmentJson').value);
-          const attachments = attOne ? (Array.isArray(attOne) ? attOne : [attOne]) : []; 
+          const toEmail   = (document.getElementById('toEmail')?.value || '').trim();
+          const subject   = (document.getElementById('subject')?.value || '').trim();
+          const bodyText  = (document.getElementById('body')?.value || '').trim();
+          const labelStr  = (document.getElementById('labels')?.value || '')
+                              .split(',').map(s=>s.trim()).filter(Boolean)[0] || 'inbox';
+          const expiresVal = (document.getElementById('expiresAt')?.value || '').trim();
+          const attOne = parseJsonOrNull(document.getElementById('attachmentJson')?.value || '');
+          const attachments = attOne ? (Array.isArray(attOne) ? attOne : [attOne]) : [];
 
           const payload = {
-            recipientId: to || undefined, 
             subject,
             body: bodyText,
-            labels: labelsArr.length ? labelsArr : ['inbox'],
+            label: labelStr,
             attachments,
             expiresAt: expiresVal ? new Date(expiresVal).toISOString() : null
           };
+          if (toEmail) payload.recipientEmail = toEmail;
 
-          const endpoint = to ? '/memos/send' : '/memos';
-          const res = await fetch(API(endpoint), { method:'POST', headers: getHeaders(), body: JSON.stringify(payload) });
+          const endpoint = toEmail ? '/memos/send' : '/memos';
+
+          const res = await fetch(API(endpoint), {
+            method:'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(payload)
+          });
           const data = await res.json().catch(()=> ({}));
-          if (res.ok) {
-            M.toast({ html: 'Created!' });
-            page = 1;
-            ['to','subject','body','labels','expiresAt','attachmentJson'].forEach(id=>{
-              const el = document.getElementById(id);
-              if (el) el.value = '';
-            });
-            M.toast({ html: to ? 'Sent to friend!' : 'Created!' });
-            await load(); // 送出後刷新列表
-            M.updateTextFields();
-            await refreshUnreadBadge(true);
-          } else {
-            M.toast({ html: `Error: ${data.message || data.code || 'Failed to create memo'}` });
+
+          if (!res.ok) {
+            M.toast({ html: `Error: ${data.message || data.code || res.status}` });
+            return;
           }
+
+          M.toast({ html: toEmail ? 'Sent to friend!' : 'Created!' });
+          ['to','toEmail','subject','body','labels','expiresAt','attachmentJson'].forEach(id=>{
+            const el = document.getElementById(id); if (el) el.value = '';
+          });
+          M.updateTextFields?.();
+          if (typeof page !== 'undefined') page = 1;
+          await load();
+          await refreshUnreadBadge?.(true);
         }
+
 
         async function pollNotifs() {
           try {
@@ -691,7 +697,7 @@
       }
 
         // utils
-        function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
+        function escapeHtml(s){ const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }; return (s||'').replace(/[&<>\"']/g, c => map[c]);}
         function parseJsonOrNull(s){ try{ return s?JSON.parse(s):null }catch(_){ return null } }
         function debounce(fn, delay){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(this,a),delay); }; }
       </script>

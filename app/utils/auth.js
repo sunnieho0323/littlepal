@@ -1,10 +1,14 @@
 // app/utils/auth.js
 const mongoose = require('mongoose');
 
-function requireAuth(req, _res, next) {
+function requireAuth(req, res, next) {
   const headerId = req.header('x-user-id');
-  const envId = process.env.DEMO_USER_ID //|| '64c7dd7aa0a0000000000001'; 
-  //receipent: window.DEMO_USER_ID = '00000000000000000000b00b';
+
+    if (process.env.NODE_ENV === 'production' && !headerId) {
+    return res.status(401).json({ code: 'UNAUTHENTICATED', message: 'Auth required' });
+  }
+  
+  const envId = process.env.DEMO_USER_ID; 
   
   const id = headerId || envId;
 
