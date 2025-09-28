@@ -2,9 +2,29 @@
 const express = require('express');
 const router = express.Router();
 const MemoController = require('../controllers/MemoController');
-const { requireAuth } = require('../utils/auth');
+//const { requireAuth } = require('../utils/auth');
 
-router.use(requireAuth);
+// --- dev-only mock user (only for /api/memos/*) ---
+const devMemoMockUser = (req, _res, next) => {
+  if (!req.user) {
+    req.user = {
+      id: process.env.DEMO_USER_ID,
+      role: process.env.DEMO_ROLE,
+      email: process.env.DEMO_EMAIL,
+    };
+  }
+  next();
+};
+
+router.use((req, res, next) => {
+  if (process.env.USE_MEMO_DEV === '1') {
+    devMemoMockUser(req, res, next);
+  } else {
+    requireAuth(req, res, next);
+  }
+});
+
+//router.use(requireAuth);
 
 router.post('/claim-all', MemoController.claimAll);
 router.delete('/delete-read', MemoController.deleteRead);
