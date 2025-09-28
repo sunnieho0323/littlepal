@@ -125,6 +125,7 @@ ul.pagination {
   flex: 1;
 }
 
+/*attachment button*/
 .att-palette { display:flex; gap:8px; flex-wrap:wrap; }
 .att-btn {
   display:inline-flex; align-items:center; gap:6px;
@@ -137,6 +138,15 @@ ul.pagination {
 .qty-btn { width:32px; height:32px; border:1px solid #ddd; background:#fff; border-radius:8px; }
 #attQty { width:72px; text-align:center; }
 .muted { color:#9e9e9e; }
+
+.att-btn[data-type="heart"].is-active,
+.att-btn[data-type="burger"].is-active,
+.att-btn[data-type="drink"].is-active { box-shadow: 0 0 0 2px #26a69a40; }
+
+#attChooser .att-btn:focus {
+  outline: none;
+  box-shadow: none;
+}
 
 /* --- Monster Cat follow eyes --- */
 .pet-follow { 

@@ -51,3 +51,20 @@ exports.me = async (req, res, next) => {
     return res.json({ ok: true, user: null });
   } catch (err) { next(err); }
 };
+
+exports.searchUsers = async (req, res, next) => {
+  try {
+    const q = String(req.query.search || '').trim().toLowerCase();
+    if (!q) return res.json({ data: [] });
+
+    const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+
+    const list = await User.find(
+      { email: rx },
+      { _id: 1, email: 1 }
+    ).sort({ email: 1 }).limit(8).lean();
+
+    return res.json({ data: list });
+  } catch (err) { next(err); }
+};
+

@@ -53,7 +53,12 @@
           <label>Sort</label>
         </div>
         <div class="input-field col s6 m3">
-          <input id="label" type="text" placeholder="Label (optional)"/>
+          <select id="label">
+            <option value="" selected>All labels</option>
+            <option value="inbox">inbox</option>
+            <option value="system">system</option>
+          </select>
+          <label>Label</label>
         </div>
       </div>
       <div class="row" style="margin-top:-12px">
@@ -98,7 +103,8 @@
         <div class="modal-content">
           <h5 id="modalTitle">New Memo</h5>
           <div class="input-field">
-            <input id="toEmail" type="email" placeholder="Recipient Email (e.g. friend@example.com)"/>
+            <input id="toEmail" type="email" list="userEmails" placeholder="Recipient Email (e.g. friend@example.com)"/>
+            <datalist id="userEmails"></datalist>
             <span class="helper-text">User Email</span>
           </div>
           <div class="input-field"><input id="subject" placeholder="Subject" required/></div>
@@ -203,7 +209,7 @@
 
           document.getElementById('search').addEventListener('input', debounce(load, 300));
           document.getElementById('sort').addEventListener('change', load);
-          document.getElementById('label').addEventListener('input', debounce(load, 300));
+          document.getElementById('label').addEventListener('change', load);
           document.getElementById('unreadOnly').addEventListener('change', load);
           document.getElementById('includeExpired').addEventListener('change', load);
           document.getElementById('btnClaimAll').onclick = claimAll;
@@ -229,10 +235,12 @@
           document.addEventListener('visibilitychange', () => {
             if (!document.hidden) refreshUnreadBadge(true);
           });
-          
+
           initAttachmentPicker();
           const btnSubmit = document.getElementById('btnSubmit');
           if (btnSubmit) btnSubmit.onclick = submitMemo;
+
+          initUserEmailSuggest();
         });
 
         let loadAbort;
@@ -531,68 +539,125 @@
         }
         
         // --- Quick Attachment state ---
-        let attType = 'none'; // 'none' | 'heart' | 'burger' | 'drink'
-        let attQty = 0;
+        const attMap = { heart: 0, burger: 0, drink: 0 }; // 各類型的數量
+        let currentType = null;                             // 目前操作類型 (null 代表 None)
 
         function renderAttUI() {
+          // 切換四顆按鈕樣式
+          const allZero = (attMap.heart|0) === 0 && (attMap.burger|0) === 0 && (attMap.drink|0) === 0;
+
           document.querySelectorAll('#attChooser .att-btn').forEach(btn => {
-            const active = btn.dataset.type === attType;
+            const t = btn.dataset.type;
+            const active =
+              t === 'none' ? allZero && !currentType
+                          : (currentType === t || attMap[t] > 0);
             btn.classList.toggle('is-active', active);
             btn.setAttribute('aria-pressed', active ? 'true' : 'false');
           });
 
+          // 數量框
           const qtyInput = document.getElementById('attQty');
-          qtyInput.disabled = (attType === 'none');
-          if (attType === 'none') attQty = 0;
-          qtyInput.value = String(attQty);
-
-          const hint = document.getElementById('attHint');
-          if (attType === 'none' || attQty <= 0) {
-            hint.textContent = 'No attachment';
+          if (!currentType) {
+            qtyInput.disabled = true;
+            qtyInput.value = '0';
           } else {
-            const label = attType === 'heart' ? 'Heart'
-                        : attType === 'burger' ? 'Burger'
-                        : 'Drink';
-            hint.textContent = `${label} +${attQty}`;
+            qtyInput.disabled = false;
+            qtyInput.value = String(attMap[currentType] || 0);
           }
-        }
 
-        function getAttachmentsFromUI() {
-          if (attType === 'none' || attQty <= 0) return [];
-          if (attType === 'heart') return [{ type: 'heart', payload: { heart: attQty } }];
-          if (attType === 'burger') return [{ type: 'item',  payload: { burger: attQty } }];
-          if (attType === 'drink')  return [{ type: 'item',  payload: { drink:  attQty } }];
-          return [];
+          // 提示文字
+          const hint = document.getElementById('attHint');
+          const chips = [];
+          if (attMap.heart > 0)  chips.push(`❤️ Heart +${attMap.heart}`);
+          if (attMap.burger > 0) chips.push(`🍔 Burger +${attMap.burger}`);
+          if (attMap.drink > 0)  chips.push(`🍹 Drink +${attMap.drink}`);
+          hint.textContent = chips.length ? chips.join(' , ') : 'No attachment';
         }
 
         function initAttachmentPicker() {
-          document.querySelectorAll('#attChooser .att-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-              attType = btn.dataset.type || 'none';
+        // 點四個圖示
+        document.querySelectorAll('#attChooser .att-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const t = btn.dataset.type;
+
+            if (t === 'none') {
+              // 清空並回到 None
+              attMap.heart = attMap.burger = attMap.drink = 0;
+              currentType = null;
               renderAttUI();
-            });
-          });
-          const qtyInput = document.getElementById('attQty');
-          document.getElementById('qtyDec').addEventListener('click', () => {
-            if (attType === 'none') return;
-            attQty = Math.max(0, (parseInt(qtyInput.value || '0', 10) || 0) - 1);
-            renderAttUI();
-          });
-          document.getElementById('qtyInc').addEventListener('click', () => {
-            if (attType === 'none') return;
-            attQty = Math.max(0, (parseInt(qtyInput.value || '0', 10) || 0) + 1);
-            renderAttUI();
-          });
-          qtyInput.addEventListener('input', () => {
-            if (attType === 'none') return;
-            const v = parseInt(qtyInput.value || '0', 10);
-            attQty = Number.isFinite(v) ? Math.max(0, v) : 0;
-            renderAttUI();
-          });
+              return;
+            }
 
+            // 切換焦點到新類型；如果該類型目前是 0，先給 1 方便連按 +
+            if (currentType !== t) currentType = t;
+            if ((attMap[t] || 0) === 0) attMap[t] = 1;
+
+            renderAttUI();
+          });
+        });
+
+        // 加減（含長按連續）
+        const qtyInput = document.getElementById('attQty');
+        const btnDec   = document.getElementById('qtyDec');
+        const btnInc   = document.getElementById('qtyInc');
+
+        let holdTimer = null;
+        const step = (d) => {
+          if (!currentType) return;
+          attMap[currentType] = Math.max(0, (attMap[currentType] || 0) + d);
           renderAttUI();
-        }
+        };
+        const startHold = (d) => { step(d); holdTimer = setInterval(() => step(d), 180); };
+        const stopHold  = () => { if (holdTimer) clearInterval(holdTimer); holdTimer = null; };
 
+        btnDec.addEventListener('pointerdown', () => startHold(-1));
+        btnDec.addEventListener('pointerup', stopHold);
+        btnDec.addEventListener('pointerleave', stopHold);
+
+        btnInc.addEventListener('pointerdown', () => startHold(+1));
+        btnInc.addEventListener('pointerup', stopHold);
+        btnInc.addEventListener('pointerleave', stopHold);
+
+        // 直接輸入數字
+        qtyInput.addEventListener('input', () => {
+          if (!currentType) return;
+          const v = parseInt(qtyInput.value || '0', 10);
+          attMap[currentType] = Number.isFinite(v) ? Math.max(0, v) : 0;
+          renderAttUI();
+        });
+
+        // 初始渲染（預設 None）
+        renderAttUI();
+      }
+
+      function getAttachmentsFromUI() {
+      const arr = [];
+      if (attMap.heart  > 0) arr.push({ type: 'heart', payload: { heart:  attMap.heart  } });
+      if (attMap.burger > 0) arr.push({ type: 'item',  payload: { burger: attMap.burger } });
+      if (attMap.drink  > 0) arr.push({ type: 'item',  payload: { drink:  attMap.drink  } });
+      return arr;
+      }
+
+
+        // --- Autocomplete for recipient ---
+        function initUserEmailSuggest() {
+          const inp = document.getElementById('toEmail');
+          const box = document.getElementById('userEmails');
+          if (!inp || !box) return;
+
+          const doFetch = debounce(async (q) => {
+            if (!q || q.length < 2) { box.innerHTML = ''; return; }
+            try {
+              const res = await fetch(API(`/auth/users?search=${encodeURIComponent(q)}`), { headers: getHeaders() });
+              const json = await res.json().catch(()=>({}));
+              const items = json.data || [];
+              // 填入 datalist options
+              box.innerHTML = items.map(u => `<option value="${u.email}"></option>`).join('');
+            } catch {}
+          }, 200);
+
+          inp.addEventListener('input', () => doFetch(inp.value.trim()));
+        }
 
         async function submitMemo() {
           const toEmail   = (document.getElementById('toEmail')?.value || '').trim();
@@ -636,8 +701,8 @@
             M.toast({ html: toEmail ? 'Sent to friend!' : 'Created!' });
 
             // ✅ 重置 picker
-            attType = 'none';
-            attQty = 0;
+            attMap.heart = attMap.burger = attMap.drink = 0;
+            currentType = null;
             renderAttUI();
 
             // 清表單

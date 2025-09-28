@@ -17,6 +17,4 @@ router.delete('/:id', MemoController.remove);
 router.post('/:id/claim', MemoController.claim);
 router.post('/send', MemoController.send);
 
-
-
 module.exports = router;
