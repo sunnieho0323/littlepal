@@ -109,7 +109,6 @@
           </div>
           <div class="input-field"><input id="subject" placeholder="Subject" required/></div>
           <div class="input-field"><textarea id="body" class="materialize-textarea" placeholder="Body"></textarea></div>
-          <div class="input-field"><input id="labels" placeholder="Labels (comma separated)"/></div>
           <div class="input-field"><input id="expiresAt" type="datetime-local"/></div>
 
           <!-- Attachment picker -->
@@ -673,7 +672,6 @@
           const payload = {
             subject,
             body: bodyText,
-            label: labelStr,
             attachments,
             expiresAt: expiresVal ? new Date(expiresVal).toISOString() : null
           };
@@ -706,7 +704,7 @@
             renderAttUI();
 
             // 清表單
-            ['toEmail','subject','body','labels','expiresAt'].forEach(id=>{
+            ['toEmail','subject','body','expiresAt'].forEach(id=>{
               const el = document.getElementById(id); if (el) el.value = '';
             });
             M.updateTextFields?.();

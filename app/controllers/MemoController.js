@@ -30,15 +30,19 @@ module.exports = {
 
   async create(req, res) {
     const userId = req.user.id;
-    const { subject, body, label, attachments, expiresAt } = req.body || {};
+    const { subject, body, attachments, expiresAt } = req.body || {};
 
     if (!subject) return err(res, 400, 'VALIDATION_ERROR', 'subject is required');
     if (expiresAt && isNaN(new Date(expiresAt))) return err(res, 400, 'VALIDATION_ERROR', 'invalid expiresAt');
 
+    // ✅ 這裡
+    const isAdmin = req.user?.role === 'admin';
+    const label = isAdmin ? 'system' : 'inbox'; // ← 這裡決定
+
     const memo = await MemoService.createMemo(userId, {
       subject: String(subject),
       body: body || '',
-      label: label || 'inbox',
+      label,
       attachments: Array.isArray(attachments) ? attachments : (attachments ? [attachments] : []),
       expiresAt: expiresAt ? new Date(expiresAt) : null,
     });
@@ -86,7 +90,7 @@ module.exports = {
 
   async send(req, res, next) {
     try {
-      let { recipientId, recipientEmail, subject, body, label, attachments, expiresAt } = req.body || {};
+      let { recipientId, recipientEmail, subject, body, attachments, expiresAt } = req.body || {};
       if (!recipientId && !recipientEmail) {
         return err(res, 400, 'VALIDATION_ERROR', 'recipientId or recipientEmail is required');
       }
@@ -102,10 +106,13 @@ module.exports = {
         return err(res, 400, 'VALIDATION_ERROR', 'recipientId must be ObjectId');
       }
 
+      const isAdmin = req.user?.role === 'admin';
+      const label = isAdmin ? 'system' : 'inbox';
+
       const memo = await MemoService.createMemo(new mongoose.Types.ObjectId(recipientId), {
         subject: String(subject),
         body: body || '',
-        label: label || 'inbox',
+        label,
         attachments: Array.isArray(attachments) ? attachments : (attachments ? [attachments] : []),
         expiresAt: expiresAt ? new Date(expiresAt) : null,
       });
