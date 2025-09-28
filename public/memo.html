@@ -97,15 +97,46 @@
       <div id="createModal" class="modal">
         <div class="modal-content">
           <h5 id="modalTitle">New Memo</h5>
-          <div class="input-field"><input id="toEmail" type="email" placeholder="Recipient Email (e.g. friend@example.com)"/><span class="helper-text">User Email</span></div>
+          <div class="input-field">
+            <input id="toEmail" type="email" placeholder="Recipient Email (e.g. friend@example.com)"/>
+            <span class="helper-text">User Email</span>
+          </div>
           <div class="input-field"><input id="subject" placeholder="Subject" required/></div>
           <div class="input-field"><textarea id="body" class="materialize-textarea" placeholder="Body"></textarea></div>
           <div class="input-field"><input id="labels" placeholder="Labels (comma separated)"/></div>
           <div class="input-field"><input id="expiresAt" type="datetime-local"/></div>
-          <p>Attachment (one-time claim): <input id="attachmentJson" placeholder='{"type":"currency","payload":{"gold":100}}'/></p>
+
+          <!-- Attachment picker -->
+          <div class="row" id="attChooser" style="margin-top:6px">
+            <div class="col s12">
+              <label class="muted" style="display:block;margin-bottom:6px;">Attachment</label>
+              <div class="att-palette">
+                <button type="button" class="att-btn" data-type="heart" aria-pressed="false" title="Heart">
+                  <span class="emoji" aria-hidden="true">❤️</span><span class="lbl">Heart</span>
+                </button>
+                <button type="button" class="att-btn" data-type="burger" aria-pressed="false" title="Burger">
+                  <span class="emoji" aria-hidden="true">🍔</span><span class="lbl">Burger</span>
+                </button>
+                <button type="button" class="att-btn" data-type="drink" aria-pressed="false" title="Drink">
+                  <span class="emoji" aria-hidden="true">🍹</span><span class="lbl">Drink</span>
+                </button>
+                <button type="button" class="att-btn is-active" data-type="none" aria-pressed="true" title="None">
+                  <span class="emoji" aria-hidden="true">🚫</span><span class="lbl">None</span>
+                </button>
+              </div>
+
+              <div class="qty-wrap">
+                <button type="button" class="qty-btn" id="qtyDec" aria-label="Decrease">−</button>
+                <input id="attQty" type="number" value="0" min="0" step="1" inputmode="numeric" />
+                <button type="button" class="qty-btn" id="qtyInc" aria-label="Increase">+</button>
+              </div>
+              <div id="attHint" class="muted" style="margin-top:6px">No attachment</div>
+            </div>
+          </div>
         </div>
+
         <div class="modal-footer">
-          <a href="#!" id="btnSubmit" class="modal-close waves-effect waves-green btn">Submit</a>
+          <a href="#!" id="btnSubmit" class="modal-close waves-effect waves-green btn">Send</a>
         </div>
       </div>
 
@@ -198,6 +229,10 @@
           document.addEventListener('visibilitychange', () => {
             if (!document.hidden) refreshUnreadBadge(true);
           });
+          
+          initAttachmentPicker();
+          const btnSubmit = document.getElementById('btnSubmit');
+          if (btnSubmit) btnSubmit.onclick = submitMemo;
         });
 
         let loadAbort;
@@ -494,16 +529,81 @@
             await refreshUnreadBadge(true);
           }
         }
+        
+        // --- Quick Attachment state ---
+        let attType = 'none'; // 'none' | 'heart' | 'burger' | 'drink'
+        let attQty = 0;
+
+        function renderAttUI() {
+          document.querySelectorAll('#attChooser .att-btn').forEach(btn => {
+            const active = btn.dataset.type === attType;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+          });
+
+          const qtyInput = document.getElementById('attQty');
+          qtyInput.disabled = (attType === 'none');
+          if (attType === 'none') attQty = 0;
+          qtyInput.value = String(attQty);
+
+          const hint = document.getElementById('attHint');
+          if (attType === 'none' || attQty <= 0) {
+            hint.textContent = 'No attachment';
+          } else {
+            const label = attType === 'heart' ? 'Heart'
+                        : attType === 'burger' ? 'Burger'
+                        : 'Drink';
+            hint.textContent = `${label} +${attQty}`;
+          }
+        }
+
+        function getAttachmentsFromUI() {
+          if (attType === 'none' || attQty <= 0) return [];
+          if (attType === 'heart') return [{ type: 'heart', payload: { heart: attQty } }];
+          if (attType === 'burger') return [{ type: 'item',  payload: { burger: attQty } }];
+          if (attType === 'drink')  return [{ type: 'item',  payload: { drink:  attQty } }];
+          return [];
+        }
+
+        function initAttachmentPicker() {
+          document.querySelectorAll('#attChooser .att-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              attType = btn.dataset.type || 'none';
+              renderAttUI();
+            });
+          });
+          const qtyInput = document.getElementById('attQty');
+          document.getElementById('qtyDec').addEventListener('click', () => {
+            if (attType === 'none') return;
+            attQty = Math.max(0, (parseInt(qtyInput.value || '0', 10) || 0) - 1);
+            renderAttUI();
+          });
+          document.getElementById('qtyInc').addEventListener('click', () => {
+            if (attType === 'none') return;
+            attQty = Math.max(0, (parseInt(qtyInput.value || '0', 10) || 0) + 1);
+            renderAttUI();
+          });
+          qtyInput.addEventListener('input', () => {
+            if (attType === 'none') return;
+            const v = parseInt(qtyInput.value || '0', 10);
+            attQty = Number.isFinite(v) ? Math.max(0, v) : 0;
+            renderAttUI();
+          });
+
+          renderAttUI();
+        }
+
 
         async function submitMemo() {
           const toEmail   = (document.getElementById('toEmail')?.value || '').trim();
           const subject   = (document.getElementById('subject')?.value || '').trim();
           const bodyText  = (document.getElementById('body')?.value || '').trim();
           const labelStr  = (document.getElementById('labels')?.value || '')
-                              .split(',').map(s=>s.trim()).filter(Boolean)[0] || 'inbox';
+                              .split(',').map(s => s.trim()).filter(Boolean)[0] || 'inbox';
           const expiresVal = (document.getElementById('expiresAt')?.value || '').trim();
-          const attOne = parseJsonOrNull(document.getElementById('attachmentJson')?.value || '');
-          const attachments = attOne ? (Array.isArray(attOne) ? attOne : [attOne]) : [];
+
+          // ✅ 從 UI 取得附件
+          const attachments = getAttachmentsFromUI();
 
           const payload = {
             subject,
@@ -516,28 +616,44 @@
 
           const endpoint = toEmail ? '/memos/send' : '/memos';
 
-          const res = await fetch(API(endpoint), {
-            method:'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(payload)
-          });
-          const data = await res.json().catch(()=> ({}));
+          try {
+            const res = await fetch(API(endpoint), {
+              method: 'POST',
+              headers: getHeaders(),
+              body: JSON.stringify(payload)
+            });
+            const data = await res.json().catch(() => ({}));
 
-          if (!res.ok) {
-            M.toast({ html: `Error: ${data.message || data.code || res.status}` });
-            return;
+            if (!res.ok) {
+              const code = data.code || res.status;
+              const msg = code === 'USER_NOT_FOUND' ? 'Recipient email not found'
+                      : code === 'VALIDATION_ERROR' ? (data.message || 'Validation error')
+                      : (data.message || `Failed: ${code}`);
+              M.toast({ html: msg });
+              return;
+            }
+
+            M.toast({ html: toEmail ? 'Sent to friend!' : 'Created!' });
+
+            // ✅ 重置 picker
+            attType = 'none';
+            attQty = 0;
+            renderAttUI();
+
+            // 清表單
+            ['toEmail','subject','body','labels','expiresAt'].forEach(id=>{
+              const el = document.getElementById(id); if (el) el.value = '';
+            });
+            M.updateTextFields?.();
+
+            if (typeof page !== 'undefined') page = 1;
+            await load();
+            await refreshUnreadBadge?.(true);
+
+          } catch (e) {
+            M.toast({ html: `Request failed: ${e.message || e}` });
           }
-
-          M.toast({ html: toEmail ? 'Sent to friend!' : 'Created!' });
-          ['to','toEmail','subject','body','labels','expiresAt','attachmentJson'].forEach(id=>{
-            const el = document.getElementById(id); if (el) el.value = '';
-          });
-          M.updateTextFields?.();
-          if (typeof page !== 'undefined') page = 1;
-          await load();
-          await refreshUnreadBadge?.(true);
         }
-
 
         async function pollNotifs() {
           try {
@@ -671,30 +787,35 @@
           }
         }
 
-        async function deleteRead(){
-        try {
-          const r = await fetch(API('/memos/delete-read'), { method:'DELETE', headers:getHeaders() });
-          if (r.ok) { M.toast({html:'Deleted read memos'}); await refreshUnreadBadge(true); return; }
-        } catch {}
+        async function deleteRead() {
+          try {
+            const r = await fetch(API('/memos/delete-read'), { method: 'DELETE', headers: getHeaders() });
+            if (r.ok) { M.toast({ html: 'Deleted read memos' }); await refreshUnreadBadge(true); return; }
+          } catch {}
 
-        let pageNum = 1, hasNext = true, deleted = 0, pageSize = 50;
-        while (hasNext && pageNum <= 50) {
-          const q = buildQuery(pageNum, pageSize);
-          q.set('status','read');
-          const res = await fetch(API(`/memos?${q.toString()}`), { headers:getHeaders() });
-          if (!res.ok) break;
-          const json = await res.json().catch(()=>({}));
-          const items = json.data || json.items || [];
-          hasNext = (json.pageInfo && json.pageInfo.hasNext) || (items.length === pageSize);
-          pageNum++;
+          let pageNum = 1, hasNext = true, deleted = 0, pageSize = 50;
+          while (hasNext && pageNum <= 50) {
+            const q = buildQuery(pageNum, pageSize);
+            q.delete('unread');
+            q.set('unread', 'false');
+            const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders() });
+            if (!res.ok) break;
+            const json = await res.json().catch(()=>({}));
+            const items = json.data || json.items || [];
+            hasNext = (json.pageInfo && json.pageInfo.hasNext) || (items.length === pageSize);
+            pageNum++;
 
-          for (const m of items) {
-            try { const r = await fetch(API(`/memos/${m._id}`), { method:'DELETE', headers:getHeaders() }); if (r.ok) deleted++; } catch {}
+            for (const m of items) {
+              try {
+                const r = await fetch(API(`/memos/${m._id}`), { method: 'DELETE', headers: getHeaders() });
+                if (r.ok) deleted++;
+              } catch {}
+            }
           }
+          M.toast({ html: `Deleted ${deleted} read memos` });
+          await refreshUnreadBadge(true);
         }
-        M.toast({ html: `Deleted ${deleted} read memos` });
-        await refreshUnreadBadge(true);
-      }
+
 
         // utils
         function escapeHtml(s){ const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }; return (s||'').replace(/[&<>\"']/g, c => map[c]);}
