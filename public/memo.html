@@ -152,6 +152,7 @@
       <script type="module" src="/js/common/app.js"></script>
       <script type="module" src="/js/common/socket.client.js"></script>
       <script type="module" src="/js/common/header.js"></script>
+      <script src="/socket.io/socket.io.js"></script>
 
       <!-- Back to Dashboard (unified) -->
       <script>
@@ -165,9 +166,6 @@
           }
         })();
       </script>
-      <script src="/socket.io/socket.io.js"></script>
-      <script type="module" src="/js/common/app.js"></script>
-      <script type="module" src="/js/common/socket.client.js"></script>
       
       <!--nav drop down-->
       <script>
@@ -181,17 +179,54 @@
           M.Modal.init(document.querySelectorAll('.modal'), {});
         });
       </script>
+
+      <script type="module">
+        import { getHeaders, getUserFromStorage, authHeaders } from '/js/memo/memo.api.js';
+        window.getHeaders = getHeaders;
+        window.getUserFromStorage = getUserFromStorage;
+        window.authHeaders = authHeaders;
+      </script>
+
       <script>
         
         const API = (p)=> `/api${p}`;
 
         // Headers: JWT if present; else dev mock x-user-id
-        function getHeaders() {
-          const h = { 'Content-Type':'application/json' };
-          const token = localStorage.getItem('jwt');
-          if (token) h['Authorization'] = `Bearer ${token}`;
-          if (window.DEMO_USER_ID) h['x-user-id'] = window.DEMO_USER_ID; // mock auth fallback
-          return h;
+        function setUser(u) { localStorage.setItem('lp_user', JSON.stringify(u || {})); }
+        function logout()   { localStorage.removeItem('lp_user'); }
+        async function doLogin(email, password) {
+          const r = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const j = await r.json();
+          if (!r.ok) throw new Error(j.message || 'Login failed');
+
+          setUser({ id: j.user._id, email: j.user.email, role: j.user.role || 'user' });
+        }
+
+        function currentUser() {
+          try { return JSON.parse(localStorage.getItem('lp_user') || '{}'); }
+          catch { return {}; }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+          const u = window.getUserFromStorage ? window.getUserFromStorage() : null;
+          const el = document.querySelector('#navbarUser'); 
+          if (!el) return;
+
+          if (u?.email) {
+            const name = u.email.split('@')[0];
+            el.textContent = name;
+          } else {
+            el.textContent = 'Guest';
+          }
+        });
+
+        function doLogout() {
+          localStorage.removeItem('lp_user');
         }
 
         let page = 1;
@@ -247,7 +282,7 @@
 
         async function load() {
           if (listLoading) {
-            try { loadAbort?.abort(); } catch(_) {}
+            try { loadAbort?.abort(); } catch (_) {}
           }
           listLoading = true;
           const seq = ++loadSeq;
@@ -267,7 +302,7 @@
             selectedId = null;
             renderDetailPlaceholder();
           };
-          
+
           const showFail = (msg='Failed to load.') => {
             list.innerHTML = `
               <div style="text-align:center; padding:40px; color:#e53935">
@@ -280,15 +315,14 @@
 
           try {
             const q = buildQuery(page, 10);
+            console.log('[load] about to fetch', `/api/memos?${q}`, getHeaders()); // ← 觀察 header
+
             const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders() });
 
-            // 204/404 視為「沒有資料」而不是錯誤
             if (res.status === 204 || res.status === 404) {
               document.getElementById('pageNum').textContent = String(page);
-              const prevLi = document.getElementById('prevLi');
-              const nextLi = document.getElementById('nextLi');
-              if (prevLi) prevLi.classList.toggle('disabled', page <= 1);
-              if (nextLi) nextLi.classList.add('disabled');
+              (document.getElementById('prevLi')||{}).classList?.toggle('disabled', page <= 1);
+              (document.getElementById('nextLi')||{}).classList?.add('disabled');
               showEmpty();
               return;
             }
@@ -299,28 +333,23 @@
               return;
             }
 
-            // 解析 JSON；若回空字串，也不會炸
             const json = await res.json().catch(()=> ({}));
             const items = json.data || json.items || [];
             const pageInfo = json.pageInfo || json.meta || { page, pageSize: 10, total: items.length, hasNext: false };
 
-            // 空結果 → 正常「No data」
-            if (!items || items.length === 0 || Number(pageInfo.total) === 0) {
+            if (!items.length || Number(pageInfo.total) === 0) {
               document.getElementById('pageNum').textContent = String(pageInfo.page || page);
-              const prevLi = document.getElementById('prevLi');
-              const nextLi = document.getElementById('nextLi');
-              if (prevLi) prevLi.classList.add('disabled');
-              if (nextLi) nextLi.classList.add('disabled');
+              (document.getElementById('prevLi')||{}).classList?.add('disabled');
+              (document.getElementById('nextLi')||{}).classList?.add('disabled');
               showEmpty();
               return;
             }
 
-            // 有資料 → 正常渲染 + 分頁狀態
             document.getElementById('pageNum').textContent = pageInfo.page;
             const prevLi = document.getElementById('prevLi') || document.getElementById('prev')?.parentElement;
             const nextLi = document.getElementById('nextLi') || document.getElementById('next')?.parentElement;
-            if (prevLi) prevLi.classList.toggle('disabled', (pageInfo.page || 1) <= 1);
-            if (nextLi) nextLi.classList.toggle('disabled', !pageInfo.hasNext);
+            prevLi?.classList?.toggle('disabled', (pageInfo.page || 1) <= 1);
+            nextLi?.classList?.toggle('disabled', !pageInfo.hasNext);
 
             if (listSummary) listSummary.textContent = `Page ${pageInfo.page} • ${items.length} items`;
             if (seq !== loadSeq) return;
@@ -330,7 +359,8 @@
               renderDetailPlaceholder();
             }
           } catch (e) {
-            showFail();
+            console.error('[load] error', e);
+            showFail(`Failed to load. ${e?.message || ''}`);
           } finally {
             listLoading = false;
           }
@@ -662,8 +692,6 @@
           const toEmail   = (document.getElementById('toEmail')?.value || '').trim();
           const subject   = (document.getElementById('subject')?.value || '').trim();
           const bodyText  = (document.getElementById('body')?.value || '').trim();
-          const labelStr  = (document.getElementById('labels')?.value || '')
-                              .split(',').map(s => s.trim()).filter(Boolean)[0] || 'inbox';
           const expiresVal = (document.getElementById('expiresAt')?.value || '').trim();
 
           // ✅ 從 UI 取得附件

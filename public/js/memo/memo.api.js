@@ -1,12 +1,30 @@
 // public/js/memo/memo.api.js
 const API = (p)=> `/api${p}`;
 
-function getHeaders() {
-  const h = { 'Content-Type':'application/json' };
+export function getHeaders(extra = {}) {
+  const h = { 'Content-Type': 'application/json' };
   const token = localStorage.getItem('jwt');
   if (token) h['Authorization'] = `Bearer ${token}`;
-  if (window.DEMO_USER_ID) h['x-user-id'] = window.DEMO_USER_ID;
+  Object.assign(h, authHeaders(), extra);
   return h;
+}
+
+export function getUserFromStorage() {
+  try {
+    const raw = localStorage.getItem('lp_user');
+    if (!raw) return null;
+    if (raw[0] !== '{') return { email: raw, role: 'user' };
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
+export function authHeaders() {
+  const u = getUserFromStorage() || {};
+  return {
+    'x-user-id': u.id || '',
+    'x-user-role': u.role || 'user',
+    'x-user-email': u.email || ''
+  };
 }
 
 export async function listMemos(params = {}) {

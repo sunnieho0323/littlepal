@@ -41,7 +41,7 @@ exports.login = async (req, res, next) => {
     }
 
     // 简化：不发 JWT，前端用 localStorage 记录邮箱即可
-    return res.json({ ok: true, message: 'Logged in', user: { email: user.email } });
+    return res.json({ ok: true, message: 'Logged in', user: { email: user.email, _id: user._id, role: user.role || 'user' } });
   } catch (err) { next(err); }
 };
 

@@ -19,8 +19,16 @@ export function getUser() {
   try {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     if (user) return user;
-    const lp = localStorage.getItem('lp_user');
-    return lp ? { email: lp } : null;
+    const raw = localStorage.getItem('lp_user');
+    if (!raw) return null;
+
+    const obj = (raw[0] === '{') ? JSON.parse(raw) : { email: raw };
+    return {
+      id: obj.id || obj._id || undefined,
+      email: obj.email || '',
+      role: obj.role || 'user',
+      avatarUrl: obj.avatarUrl
+    };
   } catch { return null; }
 }
 export function getToken() { return localStorage.getItem('token'); }

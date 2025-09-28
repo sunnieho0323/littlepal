@@ -1,30 +1,23 @@
 // app/routes/memos.routes.js
+const { Types: { ObjectId } } = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const MemoController = require('../controllers/MemoController');
-//const { requireAuth } = require('../utils/auth');
-
-// --- dev-only mock user (only for /api/memos/*) ---
-const devMemoMockUser = (req, _res, next) => {
-  if (!req.user) {
-    req.user = {
-      id: process.env.DEMO_USER_ID,
-      role: process.env.DEMO_ROLE,
-      email: process.env.DEMO_EMAIL,
-    };
-  }
-  next();
-};
 
 router.use((req, res, next) => {
-  if (process.env.USE_MEMO_DEV === '1') {
-    devMemoMockUser(req, res, next);
-  } else {
-    requireAuth(req, res, next);
+  const id = req.header('x-user-id');
+  if (!id || !ObjectId.isValid(id)) {
+    return res.status(401).json({ code: 'UNAUTHENTICATED', message: 'x-user-id missing or invalid' });
   }
+  req.user = {
+    id: new ObjectId(id),
+    role: req.header('x-user-role') || 'user',
+    email: req.header('x-user-email') || ''
+  };
+  next();
 });
 
-//router.use(requireAuth);
+//router.use(pickAuth);
 
 router.post('/claim-all', MemoController.claimAll);
 router.delete('/delete-read', MemoController.deleteRead);
