@@ -779,8 +779,9 @@
               if (t === 'item' && a.payload) {
                 for (const k of Object.keys(a.payload)) {
                   const v = a.payload[k];
-                  if (k.toLowerCase().includes('burger') || k.toLowerCase().includes('food')) pushChip('🍔', `+${v}`);
-                  else if (k.toLowerCase().includes('soft drink') || k.toLowerCase().includes('drinks')) pushChip('🍹', `+${v}`);
+                  const key = k.toLowerCase();
+                  if (key.includes('burger') || key.includes('food')) pushChip('🍔', `+${v}`);
+                  else if (key.includes('drink')) pushChip('🍹', `+${v}`);
                   else pushChip('🎁', `${k}: +${v}`);
                 }
               } else if (t === 'heart' && a.payload) {
@@ -881,7 +882,13 @@
         async function deleteRead() {
           try {
             const r = await fetch(API('/memos/delete-read'), { method: 'DELETE', headers: getHeaders() });
-            if (r.ok) { M.toast({ html: 'Deleted read memos' }); await refreshUnreadBadge(true); return; }
+            if (r.ok) { 
+              M.toast({ html: 'Deleted read memos' });
+              await load();
+              if (selectedId) { selectedId = null; renderDetailPlaceholder(); }
+              await refreshUnreadBadge(true);
+              return; 
+            }
           } catch {}
 
           let pageNum = 1, hasNext = true, deleted = 0, pageSize = 50;
@@ -904,6 +911,7 @@
             }
           }
           M.toast({ html: `Deleted ${deleted} read memos` });
+          await load(); 
           await refreshUnreadBadge(true);
         }
 
