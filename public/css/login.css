@@ -1,0 +1,96 @@
+:root {
+  --bg: linear-gradient(180deg, #fff8e1 0%, #ffe0b2 100%);  /* 背景从浅米黄到浅橙(#fff8e1, #ffe0b2) */
+  --card: #ffffffaa;         /* 卡片白色 */
+  --muted: #6b7280;        /* 灰色文字 */
+  --text: #1f2937;         /* 深灰正文 */
+  --accent: #11dfee;       /* 按钮绿色 */
+  --accent-press: #16a34a; /* 按钮按下绿色 */
+  --border: #e5e7eb;       /* 卡片边框浅灰 */
+  --danger: #ef4444;       /* 错误提示红色 */
+}
+
+*{box-sizing:border-box}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, Segoe UI, Arial;
+}
+
+.wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}
+.card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px 26px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.brand{text-align:center;margin-bottom:18px}
+.brand h1{margin:.2rem 0 .25rem;font-size:1.35rem}
+.subtitle{margin:0;color:var(--muted);font-size:.9rem}
+.field{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.field span{font-size:.9rem;color:var(--muted)}
+
+input[type="email"], input[type="password"] {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: #ffffff;     /* 白色背景 */
+  color: #000000;          /* 黑色文字 */
+  border-radius: 12px;
+  outline: none;
+}
+
+input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+.password{display:flex;gap:6px;align-items:center}
+.password input{flex:1}
+
+.password button {
+  border: 1px solid #d1d5db;   /* 浅灰边框 (#d1d5db) */
+  background: #ffffff;         /* 白色背景 */
+  color: #374151;              /* 深灰文字/图标 */
+  padding: 0 12px;
+  height: 42px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.password button:hover {
+  background: #f3f4f6;         /* hover 时浅灰背景 */
+  color: #111827;              /* 更深灰色 */
+}
+
+.password button:active {
+  transform: scale(.98);
+}
+
+.row{display:flex;justify-content:space-between;align-items:center;margin:6px 0 12px}
+.checkbox{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.9rem}
+.link{color:#93c5fd;text-decoration:none}
+.link[aria-disabled="true"]{opacity:.7;pointer-events:none}
+
+.primary {
+  width: 100%;
+  margin-top: 6px;
+  background: #26a69a;      /* Materialize 默认绿色 */
+  color: #fff;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+}
+.primary:hover {
+  background: #2bbbad;      /* hover 颜色 */
+}
+
+.alert {
+  background: #ffffff;        /* 白色背景 */
+  color: #000000;             /* 黑色文字 */
+  border-left: 4px solid var(--danger); /* 红色边框，保持原有变量 */
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 6px 0;
+  font-size: .92rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* 轻微阴影，让它更明显 */
+}
+
+.meta{color:var(--muted);text-align:center;margin-top:14px}
+@media (max-width:420px){ .card{padding:24px 18px} }

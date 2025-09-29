@@ -15,6 +15,16 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/css/app.css" />
+    <script>
+      (function () {
+        // Protect page: require login via localStorage key set by login.js
+        try {
+          if (!localStorage.getItem('lp_user')) {
+            location.href = '/login.html';
+          }
+        } catch (_) {}
+      })();
+    </script>
   </head>
   <body class="littlepal-room">
     <!-- Top Nav -->
@@ -122,5 +132,36 @@
       });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io(); // connect to server
+    </script>
+    <script>
+      (async function () {
+        const petBtn = document.querySelector('[data-testid="nav-pet"]');
+        if (!petBtn) return;
+
+        let petId = localStorage.getItem('petId');
+        if (!petId) {
+          try {
+            const res = await fetch('/api/pet', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ownerId: 'demo-user', name: 'Milo', type: 'cat' })
+            });
+            if (res.ok) {
+              const data = await res.json();
+              petId = data._id;
+              localStorage.setItem('petId', petId);
+            }
+          } catch (e) {
+            console.warn('Create pet error', e);
+          }
+        }
+        if (petId) {
+          petBtn.href = `/pet.html?petId=${petId}`;
+        }
+      })();
+    </script>
   </body>
 </html>

@@ -11,7 +11,7 @@ body {
 .game-container {
     display: flex;
     height: 100vh;
-    align-items: center;
+    align-items: top;
     justify-content: center;
     padding: 20px;
     box-sizing: border-box;
@@ -50,16 +50,17 @@ body {
 .speech-bubble.cat {
     position: relative;
     background: #ff4757;
-    border-radius: 8px;
-    padding: 16px 20px;
+    border-radius: 12px;
+    padding: 18px 22px;
     max-width: 400px;
     min-width: 80px;
     width: fit-content;
     height: fit-content;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 12px rgba(255, 71, 87, 0.25), 0 2px 6px rgba(255, 71, 87, 0.15);
     margin-bottom: 16px;
     animation: materializeSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .speech-bubble.cat::before {
@@ -67,7 +68,8 @@ body {
     position: absolute;
     background: #ff4757;
     left: -15px;
-    top: 30px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 0;
     height: 0;
     border-top: 15px solid transparent;
@@ -79,7 +81,8 @@ body {
     content: '';
     position: absolute;
     left: -12px;
-    top: 32px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 0;
     height: 0;
     border-top: 13px solid transparent;
@@ -108,7 +111,8 @@ body {
     content: '';
     position: absolute;
     right: -15px;
-    top: 30px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 0;
     height: 0;
     border-top: 15px solid transparent;
@@ -120,7 +124,8 @@ body {
     content: '';
     position: absolute;
     right: -12px;
-    top: 32px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 0;
     height: 0;
     border-top: 13px solid transparent;
@@ -258,19 +263,21 @@ body {
     display: none;
     position: relative;
     background: #ff4757;
-    border-radius: 8px;
-    padding: 12px 16px;
+    border-radius: 12px;
+    padding: 14px 18px;
     max-width: 100px;
     margin-bottom: 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 12px rgba(255, 71, 87, 0.25), 0 2px 6px rgba(255, 71, 87, 0.15);
     animation: materializeSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .typing-indicator::before {
     content: '';
     position: absolute;
     left: -15px;
-    top: 30px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 0;
     height: 0;
     border-top: 15px solid transparent;
@@ -282,7 +289,8 @@ body {
     content: '';
     position: absolute;
     left: -12px;
-    top: 32px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 0;
     height: 0;
     border-top: 13px solid transparent;

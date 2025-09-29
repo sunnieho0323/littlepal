@@ -28,13 +28,21 @@ app.use('/api/auth', require('./app/routes/auth.routes'));
 app.use('/api/memos', require('./app/routes/memos.routes'));
 app.use('/api/pet', require('./app/routes/pet.routes'));
 app.use('/api/chat', require('./app/routes/chat.routes'));
+app.use('/api/notifications', require('./app/routes/notifications.routes'));
+
 
 // make io available inside req.app
 app.set('io', io);
 
+// Broadcast a pet state update to everyone in that pet's room. */
+const broadcastPetUpdate = (petId, payload) => {
+  io.to(`pet:${petId}`).emit('pet:update', payload);
+};
+app.set('broadcastPetUpdate', broadcastPetUpdate);
+
 // homepage (serves the static index.html)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // socket.io setup
@@ -46,8 +54,30 @@ io.on('connection', (socket) => {
     console.log(`👤 User ${userId} joined room:${userId}`);
   });
 
+  // per-pet rooms for realtime pet updates 
+  socket.on('join-pet', ({ petId }) => {
+    if (petId) {
+      socket.join(`pet:${petId}`);
+      console.log(`🐾 Socket ${socket.id} joined pet room: pet:${petId}`);
+      socket.emit('joined-pet', { room: `pet:${petId}` });
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('❌ Client disconnected:', socket.id);
+  });
+});
+
+// --- JSON error handler ---
+app.use((err, req, res, _next) => {
+  console.error(err);
+
+  const isCast = err?.name === 'CastError';
+  const status = isCast ? 400 : (err.status || 500);
+
+  res.status(status).json({
+    code: isCast ? 'BAD_ID' : (err.code || 'INTERNAL_ERROR'),
+    message: err.message || 'Internal Server Error'
   });
 });
 

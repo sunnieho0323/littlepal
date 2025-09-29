@@ -75,7 +75,8 @@ littlepal/
 │  ├─ models/               # Mongoose models
 │  ├─ controllers/          # Controller logic
 │  ├─ services/             # Business logic
-│  └─ routes/               # API routes
+│  ├─ routes/               # API routes
+│  └─ utils/                # Utility toolbox
 ├─ public/
 │  ├─ index.html            # Cat room homepage
 │  ├─ memo.html             # Memo feature (Jessica)

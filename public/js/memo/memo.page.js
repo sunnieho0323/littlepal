@@ -1,3 +1,4 @@
+// public/js/memo/memo.page.js
 import { listMemos, createMemo, completeMemo, deleteMemo } from './memo.api.js';
 import { toast } from '../common/app.js';
 import './memo.socket.js'; // if you want to saprately handle socket events
@@ -34,6 +35,7 @@ form.addEventListener('submit', async (e) => {
   await refresh();
 });
 
+/*
 list.addEventListener('click', async (e) => {
   const li = e.target.closest('li.collection-item');
   if (!li) return;
@@ -49,5 +51,6 @@ list.addEventListener('click', async (e) => {
     li.remove();
   }
 });
+*/
 
 document.addEventListener('DOMContentLoaded', refresh);
