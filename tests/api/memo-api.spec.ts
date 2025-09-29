@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { createMemo, listMemos } from './helpers';
-import { authHeaders, userA, userB } from './test-users';
+import { createMemo, listMemos } from '../helpers';
+import { authHeaders, userA, userB } from '../test-users';
 
 test.describe('Memos API', () => {
   test('Create → 201 & payload shape', async ({ request }) => {

@@ -35,7 +35,7 @@
 
       <h5 class="mailbox-title" style="display:flex; align-items:center; justify-content:space-between; gap:12px">
         <span>Mailbox</span>
-        <span id="unreadBadge" class="new badge" data-badge-caption="Unread">0</span>
+        <span id="unreadBadge" data-testid="unread-badge" class="new badge" data-badge-caption="Unread">0</span>
       </h5>
 
       <!-- Filters -->
@@ -78,18 +78,18 @@
         <div>
           <a class="btn waves-effect waves-light" id="btnClaimAll">Claim All</a>
           <a class="btn waves-effect red" id="btnDeleteRead">Delete Read</a>
-          <a class="btn modal-trigger" href="#createModal">New Memo</a>
+          <a class="btn modal-trigger" data-testid="create-btn" href="#createModal">New Memo</a>
         </div>
       </div>
 
       <!-- Two columns -->
       <div class="two-col">
         <div class="left-col">
-          <div id="list"></div>
+          <div id="list" data-testid="memo-list"></div>
           <ul class="pagination center" style="margin-top:14px">
-            <li id="prevLi" class="waves-effect"><a href="#!" id="prev">Prev</a></li>
-            <li class="active"><a href="#!" id="pageNum">1</a></li>
-            <li id="nextLi" class="waves-effect"><a href="#!" id="next">Next</a></li>
+            <li id="prevLi" data-testid="pager-prev" class="waves-effect"><a href="#!" id="prev">Prev</a></li>
+            <li data-testid="page-number" class="active"><a href="#!" id="pageNum">1</a></li>
+            <li id="nextLi" data-testid="pager-next" class="waves-effect"><a href="#!" id="next">Next</a></li>
           </ul>
         </div>
         
@@ -314,7 +314,7 @@
           };
 
           try {
-            const q = buildQuery(page, 10);
+            const q = buildQuery(page, 4);
             console.log('[load] about to fetch', `/api/memos?${q}`, getHeaders()); // ← inspect headers
 
             const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders() });
@@ -335,7 +335,7 @@
 
             const json = await res.json().catch(()=> ({}));
             const items = json.data || json.items || [];
-            const pageInfo = json.pageInfo || json.meta || { page, pageSize: 10, total: items.length, hasNext: false };
+            const pageInfo = json.pageInfo || json.meta || { page, pageSize: 4, total: items.length, hasNext: false };
 
             if (!items.length || Number(pageInfo.total) === 0) {
               document.getElementById('pageNum').textContent = String(pageInfo.page || page);
@@ -432,7 +432,7 @@
             const fmt = new Intl.DateTimeFormat(undefined, {year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit'});
             
             return `
-              <div class="memo-row ${selectedId===m._id?'selected':''}" onclick="openMemo('${m._id}', this)">
+              <div class="memo-item memo-row ${selectedId===m._id?'selected':''}" onclick="openMemo('${m._id}', this)">
                 <div class="left">
                   <span class="badge ${isUnread ? 'new':''}" data-badge-caption="${isUnread?'Unread':'Read'}"></span>
                   <span class="subject">${escapeHtml(m.subject)}</span>
