@@ -57,12 +57,10 @@ The following UI scenarios were tested on **memo.html**:
 ## 4. Sample Report Screenshots
 
 API run:  
-![Playwright API Test Report](memo-API-test-report.png)
+![Playwright API Test Report](memo-API-test-result.png)
 
 UI run:  
-![Playwright UI Test Report](memo-UI-test-report.png)
-
-*(Make sure `test-results/playwright-report.png` images are committed with this file so they display in GitHub.)*
+![Playwright UI Test Report](memo-UI-test-result.png)
 
 ---
 
