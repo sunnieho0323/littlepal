@@ -17,6 +17,13 @@ router.use((req, res, next) => {
   next();
 });
 
+router.param('id', (req, res, next, id) => {
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({ code: 'BAD_REQUEST', message: 'Invalid memo id' });
+  }
+  next();
+  });
+
 //router.use(pickAuth);
 
 router.post('/claim-all', MemoController.claimAll);

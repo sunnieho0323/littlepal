@@ -23,11 +23,11 @@
   <div class="container">
     <div class="room-card z-depth-1">
 
-                      <!-- Pet: eyes follow the cursor -->
+      <!-- Pet: eyes follow the cursor -->
       <div class="pet-follow">
         <div class="pet-wrap">
           <img src="/img/monster_cat_noeyeball.png" alt="Monster Cat" class="cat-follow" />
-          <!-- 左右眼白的中心點（我們只畫瞳孔，覆蓋在原圖眼白上） -->
+          <!-- Centers of the sclera; we only draw pupils and overlay them on the original eye whites -->
           <div class="eye eye-left"><div class="pupil"></div></div>
           <div class="eye eye-right"><div class="pupil"></div></div>
         </div>
@@ -259,7 +259,7 @@
           };
           document.getElementById('btnSubmit').onclick = submitMemo;
 
-          // polling notifications (push style refresh)
+          // polling notifications (push-style refresh)
           setInterval(pollNotifs, 4000);
 
           // unread heartbeat
@@ -315,7 +315,7 @@
 
           try {
             const q = buildQuery(page, 10);
-            console.log('[load] about to fetch', `/api/memos?${q}`, getHeaders()); // ← 觀察 header
+            console.log('[load] about to fetch', `/api/memos?${q}`, getHeaders()); // ← inspect headers
 
             const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders() });
 
@@ -403,7 +403,7 @@
           q.set('pageSize', size);
 
           const search = document.getElementById('search').value.trim();
-      if (search) q.set('search', search);
+          if (search) q.set('search', search);
 
           const label = document.getElementById('label').value.trim();
           const [sortKey, order] = document.getElementById('sort').value.split(':');
@@ -411,7 +411,7 @@
           const includeExpired = document.getElementById('includeExpired').checked;
 
           if (label) q.set('label', label);
-          if (unreadOnly) q.set('unread','true');     // 若後端只吃 status=unread，改成：q.set('status','unread');
+          if (unreadOnly) q.set('unread','true');     // if backend only accepts status=unread, use: q.set('status','unread');
           if (includeExpired) q.set('includeExpired','true');
           q.set('sort', sortKey);
           q.set('order', order);
@@ -455,11 +455,11 @@
         const claimedLocal = new Set();
 
         function renderClaimBtn(m) {
-        if (!hasAttachment(m)) return '';
-        if (isExpired(m)) return `<a class="btn disabled" onclick="event.stopPropagation()">Expired</a>`;
-        if (isClaimed(m)) return `<a class="btn disabled" onclick="event.stopPropagation()">Claimed</a>`;
-        return `<a class="btn" onclick="claim('${m._id}', this, event)">Claim</a>`;
-      }
+          if (!hasAttachment(m)) return '';
+          if (isExpired(m)) return `<a class="btn disabled" onclick="event.stopPropagation()">Expired</a>`;
+          if (isClaimed(m)) return `<a class="btn disabled" onclick="event.stopPropagation()">Claimed</a>`;
+          return `<a class="btn" onclick="claim('${m._id}', this, event)">Claim</a>`;
+        }
 
         function updateUnreadBadge(n) {
           const el = document.getElementById('unreadBadge');
@@ -468,7 +468,7 @@
 
         async function openMemo(id, rowEl) {
           selectedId = id;
-          // 左欄選取樣式
+          // left list selection style
           Array.from(document.querySelectorAll('.memo-row')).forEach(el=> el.classList.remove('selected'));
           if (rowEl) rowEl.classList.add('selected');
           
@@ -507,8 +507,7 @@
             renderAttachmentIcons(m.attachments);
           }
             
-
-          // 你原本會靠後端/重新載入來標已讀；保留未讀刷新
+          // you originally rely on backend/reload to mark as read; keep unread badge refresh
           await refreshUnreadBadge(true);
         }
 
@@ -543,7 +542,6 @@
                 } else if (code === 410 || code === 400) { 
                   btnEl.textContent = 'Expired';
                 } else {
-                  
                   btnEl.textContent = 'Claim';
                   btnEl.classList.remove('disabled');
                   btnEl.removeAttribute('aria-disabled');
@@ -568,11 +566,11 @@
         }
         
         // --- Quick Attachment state ---
-        const attMap = { heart: 0, burger: 0, drink: 0 }; // 各類型的數量
-        let currentType = null;                             // 目前操作類型 (null 代表 None)
+        const attMap = { heart: 0, burger: 0, drink: 0 }; // quantity for each type
+        let currentType = null;                             // current type in focus (null means None)
 
         function renderAttUI() {
-          // 切換四顆按鈕樣式
+          // toggle active style for the four buttons
           const allZero = (attMap.heart|0) === 0 && (attMap.burger|0) === 0 && (attMap.drink|0) === 0;
 
           document.querySelectorAll('#attChooser .att-btn').forEach(btn => {
@@ -584,7 +582,7 @@
             btn.setAttribute('aria-pressed', active ? 'true' : 'false');
           });
 
-          // 數量框
+          // quantity input
           const qtyInput = document.getElementById('attQty');
           if (!currentType) {
             qtyInput.disabled = true;
@@ -594,7 +592,7 @@
             qtyInput.value = String(attMap[currentType] || 0);
           }
 
-          // 提示文字
+          // hint text
           const hint = document.getElementById('attHint');
           const chips = [];
           if (attMap.heart > 0)  chips.push(`❤️ Heart +${attMap.heart}`);
@@ -604,69 +602,68 @@
         }
 
         function initAttachmentPicker() {
-        // 點四個圖示
-        document.querySelectorAll('#attChooser .att-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const t = btn.dataset.type;
+          // click the four icons
+          document.querySelectorAll('#attChooser .att-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const t = btn.dataset.type;
 
-            if (t === 'none') {
-              // 清空並回到 None
-              attMap.heart = attMap.burger = attMap.drink = 0;
-              currentType = null;
+              if (t === 'none') {
+                // clear and return to None
+                attMap.heart = attMap.burger = attMap.drink = 0;
+                currentType = null;
+                renderAttUI();
+                return;
+              }
+
+              // switch focus to the new type; if its current value is 0, set to 1 for faster + tapping
+              if (currentType !== t) currentType = t;
+              if ((attMap[t] || 0) === 0) attMap[t] = 1;
+
               renderAttUI();
-              return;
-            }
+            });
+          });
 
-            // 切換焦點到新類型；如果該類型目前是 0，先給 1 方便連按 +
-            if (currentType !== t) currentType = t;
-            if ((attMap[t] || 0) === 0) attMap[t] = 1;
+          // plus/minus (supports press-and-hold)
+          const qtyInput = document.getElementById('attQty');
+          const btnDec   = document.getElementById('qtyDec');
+          const btnInc   = document.getElementById('qtyInc');
 
+          let holdTimer = null;
+          const step = (d) => {
+            if (!currentType) return;
+            attMap[currentType] = Math.max(0, (attMap[currentType] || 0) + d);
+            renderAttUI();
+          };
+          const startHold = (d) => { step(d); holdTimer = setInterval(() => step(d), 180); };
+          const stopHold  = () => { if (holdTimer) clearInterval(holdTimer); holdTimer = null; };
+
+          btnDec.addEventListener('pointerdown', () => startHold(-1));
+          btnDec.addEventListener('pointerup', stopHold);
+          btnDec.addEventListener('pointerleave', stopHold);
+
+          btnInc.addEventListener('pointerdown', () => startHold(+1));
+          btnInc.addEventListener('pointerup', stopHold);
+          btnInc.addEventListener('pointerleave', stopHold);
+
+          // manual numeric input
+          qtyInput.addEventListener('input', () => {
+            if (!currentType) return;
+            const v = parseInt(qtyInput.value || '0', 10);
+            attMap[currentType] = Number.isFinite(v) ? Math.max(0, v) : 0;
             renderAttUI();
           });
-        });
 
-        // 加減（含長按連續）
-        const qtyInput = document.getElementById('attQty');
-        const btnDec   = document.getElementById('qtyDec');
-        const btnInc   = document.getElementById('qtyInc');
-
-        let holdTimer = null;
-        const step = (d) => {
-          if (!currentType) return;
-          attMap[currentType] = Math.max(0, (attMap[currentType] || 0) + d);
+          // initial render (default None)
           renderAttUI();
-        };
-        const startHold = (d) => { step(d); holdTimer = setInterval(() => step(d), 180); };
-        const stopHold  = () => { if (holdTimer) clearInterval(holdTimer); holdTimer = null; };
+        }
 
-        btnDec.addEventListener('pointerdown', () => startHold(-1));
-        btnDec.addEventListener('pointerup', stopHold);
-        btnDec.addEventListener('pointerleave', stopHold);
-
-        btnInc.addEventListener('pointerdown', () => startHold(+1));
-        btnInc.addEventListener('pointerup', stopHold);
-        btnInc.addEventListener('pointerleave', stopHold);
-
-        // 直接輸入數字
-        qtyInput.addEventListener('input', () => {
-          if (!currentType) return;
-          const v = parseInt(qtyInput.value || '0', 10);
-          attMap[currentType] = Number.isFinite(v) ? Math.max(0, v) : 0;
-          renderAttUI();
-        });
-
-        // 初始渲染（預設 None）
-        renderAttUI();
-      }
-
-      function getAttachmentsFromUI() {
-      const arr = [];
-      if (attMap.heart  > 0) arr.push({ type: 'heart', payload: { heart:  attMap.heart  } });
-      if (attMap.burger > 0) arr.push({ type: 'item',  payload: { burger: attMap.burger } });
-      if (attMap.drink  > 0) arr.push({ type: 'item',  payload: { drink:  attMap.drink  } });
-      return arr;
-      }
-
+        function getAttachmentsFromUI() {
+          const arr = [];
+          if (attMap.heart  > 0) arr.push({ type: 'heart', payload: { heart:  attMap.heart  } });
+          if (attMap.burger > 0) arr.push({ type: 'item',  payload: { burger: attMap.burger } });
+          if (attMap.drink  > 0) arr.push({ type: 'item',  payload: { drink:  attMap.drink  } });
+          return arr;
+        }
 
         // --- Autocomplete for recipient ---
         function initUserEmailSuggest() {
@@ -680,7 +677,7 @@
               const res = await fetch(API(`/auth/users?search=${encodeURIComponent(q)}`), { headers: getHeaders() });
               const json = await res.json().catch(()=>({}));
               const items = json.data || [];
-              // 填入 datalist options
+              // fill datalist options
               box.innerHTML = items.map(u => `<option value="${u.email}"></option>`).join('');
             } catch {}
           }, 200);
@@ -694,7 +691,7 @@
           const bodyText  = (document.getElementById('body')?.value || '').trim();
           const expiresVal = (document.getElementById('expiresAt')?.value || '').trim();
 
-          // ✅ 從 UI 取得附件
+          // ✅ get attachments from UI
           const attachments = getAttachmentsFromUI();
 
           const payload = {
@@ -726,12 +723,12 @@
 
             M.toast({ html: toEmail ? 'Sent to friend!' : 'Created!' });
 
-            // ✅ 重置 picker
+            // ✅ reset picker
             attMap.heart = attMap.burger = attMap.drink = 0;
             currentType = null;
             renderAttUI();
 
-            // 清表單
+            // clear form
             ['toEmail','subject','body','expiresAt'].forEach(id=>{
               const el = document.getElementById(id); if (el) el.value = '';
             });
@@ -808,15 +805,15 @@
         }
 
         function isExpired(m) {
-        return !!(m.expiresAt && new Date(m.expiresAt).getTime() <= Date.now());
-      }
+          return !!(m.expiresAt && new Date(m.expiresAt).getTime() <= Date.now());
+        }
 
         function hasAttachment(m) {
           return Array.isArray(m.attachments) ? m.attachments.length > 0 : !!m.attachments;
         }
 
         function isClaimed(m) {
-          // 陣列：全部已領；物件：claimed=true；或本地暫存（成功領取後先暫時標記）
+          // array: all items claimed; object: claimed=true; or local temp flag (set after successful claim)
           const fromArray = Array.isArray(m.attachments) && m.attachments.length > 0
             ? m.attachments.every(a => a?.claimed === true)
             : false;
@@ -923,14 +920,14 @@
       </script>
 
       <script>
-        // 讓怪獸貓的眼睛跟隨滑鼠
+        // Make the monster cat's eyes follow the cursor
         (function () {
           const wrap = document.querySelector('.pet-wrap');
           if (!wrap) return;
 
           const eyes = Array.from(wrap.querySelectorAll('.eye'));
 
-          // 計算並限制位移在半徑內
+          // Compute and clamp the displacement within a radius
           function movePupil(e) {
             const rect = wrap.getBoundingClientRect();
             const mouseX = (e.touches?.[0]?.clientX ?? e.clientX) - rect.left;
@@ -940,32 +937,32 @@
               const pupil = eye.querySelector('.pupil');
               if (!pupil) return;
 
-              // 眼睛中心（相對於 wrap）
+              // Eye center (relative to wrap)
               const eyeRect = eye.getBoundingClientRect();
               const cx = eyeRect.left - rect.left + eyeRect.width / 2;
               const cy = eyeRect.top  - rect.top  + eyeRect.height / 2;
 
-              // 指向向量
+              // Direction vector
               let dx = mouseX - cx;
               let dy = mouseY - cy;
 
-              // 限制最大位移（半徑）
+              // Limit max displacement (radius)
               const r = parseFloat(getComputedStyle(eye).getPropertyValue('--pupil-move')) || 8;
               const len = Math.hypot(dx, dy) || 1;
               const ux = dx / len, uy = dy / len;
               const tx = Math.min(len, r) * ux;
               const ty = Math.min(len, r) * uy;
 
-              // 以瞳孔自身中心為基準做位移
+              // Translate based on the pupil's own center
               pupil.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px))`;
             });
           }
 
-          // 滑鼠、觸控皆支援
+          // Support mouse and touch
           document.addEventListener('mousemove', movePupil);
           document.addEventListener('touchmove', movePupil, { passive: true });
 
-          // 離開區域時回到中心
+          // Return to center when leaving the area
           wrap.addEventListener('mouseleave', () => {
             wrap.querySelectorAll('.pupil').forEach(p => {
               p.style.transform = 'translate(-50%, -50%)';

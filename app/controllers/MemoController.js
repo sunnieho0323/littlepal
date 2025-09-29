@@ -10,6 +10,10 @@ function err(res, status, code, message) {
   return res.status(status).json({ code, message });
 }
 
+function created(res, data, path) {
+  return res.status(201).location(path).json(data);
+}
+
 module.exports = {
 
   async list(req, res, next) {
@@ -18,7 +22,7 @@ module.exports = {
 
       // normalize query
       const q = { ...req.query };
-      if (q.q && !q.search) q.search = q.q;        // 支援 ?q=
+      if (q.q && !q.search) q.search = q.q;        // support ?q=
       q.page = Math.max(1, parseInt(q.page ?? '1', 10) || 1);
       q.pageSize = Math.min(50, Math.max(1, parseInt(q.pageSize ?? '10', 10) || 10));
       if (q.unread !== undefined) q.unread = (q.unread === 'true' || q.unread === true);
@@ -35,9 +39,8 @@ module.exports = {
     if (!subject) return err(res, 400, 'VALIDATION_ERROR', 'subject is required');
     if (expiresAt && isNaN(new Date(expiresAt))) return err(res, 400, 'VALIDATION_ERROR', 'invalid expiresAt');
 
-    // ✅ 這裡
     const isAdmin = req.user?.role === 'admin';
-    const label = isAdmin ? 'system' : 'inbox'; // ← 這裡決定
+    const label = isAdmin ? 'system' : 'inbox';
 
     const memo = await MemoService.createMemo(userId, {
       subject: String(subject),
@@ -46,7 +49,8 @@ module.exports = {
       attachments: Array.isArray(attachments) ? attachments : (attachments ? [attachments] : []),
       expiresAt: expiresAt ? new Date(expiresAt) : null,
     });
-    return ok(res, memo);
+
+    return created(res, memo, `/api/memos/${memo._id}`);
   },
 
   async getById(req, res) {
@@ -127,7 +131,7 @@ module.exports = {
       const { status, result, error } = await MemoService.claimAttachment(uid, id);
 
       if (status !== 200) {
-        // 對齊你前端處理：409/410/400 回 message/code
+        // align with frontend handling: return message/code for 409/410/400
         const msg = error || (status === 409 ? 'ALREADY_CLAIMED' :
                               status === 410 ? 'MEMO_EXPIRED' :
                               status === 404 ? 'NOT_FOUND' : 'BAD_REQUEST');
