@@ -59,17 +59,10 @@ The Memo system lets each user manage their own mailbox (CRUD + claim + expiry).
 | POST   | /api/memos/:id/claim      | Claim an attachment (once only) |
 | DELETE | /api/memos/delete-read    | Bulk delete all read memos   |
 
-### Running Playwright Tests for Memo
-Run all E2E tests (including Memo):
-
+## Running Playwright Tests:
+Run all E2E tests:
 ```bash
-Copy code
 npx playwright test
-```
-### Run only Memo tests:
-```bash
-Copy code
-npx playwright test tests/memo.spec.js
 ```
 
 ---
