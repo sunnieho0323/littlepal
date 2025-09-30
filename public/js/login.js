@@ -36,7 +36,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       return;
     }
 
-    localStorage.setItem('lp_user', data.user.email);
+    localStorage.setItem('lp_user', JSON.stringify({
+      id: data.user._id,
+      email: data.user.email,
+      role: data.user.role || 'user'
+    }));
+    
     window.location.href = '/index.html';
   } catch {
     err.textContent = 'Network error. Please try again.';

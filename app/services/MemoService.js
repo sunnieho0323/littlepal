@@ -27,7 +27,7 @@ async function listMemos(userId, opts) {
     includeExpired,
   } = opts || {};
 
-  // ✅ 接受 q 或 search
+  // ✅ accept q or search
   const search = (opts?.search ?? opts?.q ?? '').toString().trim();
 
   const and = [{ userId, deletedAt: null }];
@@ -44,7 +44,7 @@ async function listMemos(userId, opts) {
     and.push({ unread: unread === 'true' || unread === true });
   }
 
-  // ✅ 最小全文搜尋（subject/body）
+  // ✅ basic full-text search (subject/body)
   if (search) {
     const rx = new RegExp(search, 'i');
     and.push({ $or: [{ subject: rx }, { body: rx }] });
@@ -101,12 +101,12 @@ async function claimAttachment(userId, memoId) {
 
   if (Memo.isExpired(memo)) return { status: 410, error: 'MEMO_EXPIRED' };
 
-  // 無附件
+  // no attachment
   if (!memo.attachments || (Array.isArray(memo.attachments) && memo.attachments.length === 0)) {
     return { status: 400, error: 'NO_ATTACHMENT' };
   }
 
-  // 已全數領取
+  // all attachments already claimed
   if (Array.isArray(memo.attachments)) {
     const allClaimed = memo.attachments.every(a => a?.claimed === true);
     if (allClaimed) return { status: 409, error: 'ALREADY_CLAIMED' };
@@ -116,7 +116,7 @@ async function claimAttachment(userId, memoId) {
 
   const now = new Date();
 
-  // 原子更新：把所有未領的附件設為已領，且避免過期
+  // atomic update: mark all unclaimed attachments as claimed, ensuring not expired
   const r = await Memo.updateOne(
     {
       _id: memoId,
@@ -135,11 +135,11 @@ async function claimAttachment(userId, memoId) {
   );
 
   if (r.modifiedCount === 0) {
-    // 可能同時被領取或過期
+    // possibly claimed simultaneously or expired
     return { status: 409, error: 'ALREADY_CLAIMED_OR_EXPIRED' };
   }
 
-  // 通知（讓 polling 有事件）
+  // send notification (so polling can detect event)
   await createNotification(userId, 'memo.claimed', { memoId });
 
   return { status: 200, result: { memoId, claimedAt: now } };
@@ -147,9 +147,9 @@ async function claimAttachment(userId, memoId) {
 
 async function updateMemo(userId, memoId, patch = {}) {
   const $set = {};
-  if (typeof patch.unread === 'boolean') $set.unread = patch.unread;
-  if (Array.isArray(patch.labels))       $set.labels = patch.labels;
-  if (typeof patch.archived === 'boolean') $set.archived = patch.archived;
+  if (typeof patch.unread === 'boolean')      $set.unread = patch.unread;
+  if (typeof patch.label === 'string')        $set.label  = patch.label;
+  if (typeof patch.archived === 'boolean')    $set.archived = patch.archived;
 
   if (!Object.keys($set).length) {
     return { status: 400, error: 'NO_UPDATABLE_FIELDS' };

@@ -32,10 +32,6 @@ PORT=3000
 MONGO_URL=mongodb://localhost:27017
 MONGO_DB=littlepal
 JWT_SECRET=your-secret-key
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
 OPENAI_API_KEY=your-openai-api-key
 ```
 ### 4. Run the project

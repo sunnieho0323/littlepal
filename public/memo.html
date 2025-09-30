@@ -23,11 +23,11 @@
   <div class="container">
     <div class="room-card z-depth-1">
 
-                      <!-- Pet: eyes follow the cursor -->
+      <!-- Pet: eyes follow the cursor -->
       <div class="pet-follow">
         <div class="pet-wrap">
           <img src="/img/monster_cat_noeyeball.png" alt="Monster Cat" class="cat-follow" />
-          <!-- 左右眼白的中心點（我們只畫瞳孔，覆蓋在原圖眼白上） -->
+          <!-- Centers of the sclera; we only draw pupils and overlay them on the original eye whites -->
           <div class="eye eye-left"><div class="pupil"></div></div>
           <div class="eye eye-right"><div class="pupil"></div></div>
         </div>
@@ -35,7 +35,7 @@
 
       <h5 class="mailbox-title" style="display:flex; align-items:center; justify-content:space-between; gap:12px">
         <span>Mailbox</span>
-        <span id="unreadBadge" class="new badge" data-badge-caption="Unread">0</span>
+        <span id="unreadBadge" data-testid="unread-badge" class="new badge" data-badge-caption="Unread">0</span>
       </h5>
 
       <!-- Filters -->
@@ -53,7 +53,12 @@
           <label>Sort</label>
         </div>
         <div class="input-field col s6 m3">
-          <input id="label" type="text" placeholder="Label (optional)"/>
+          <select id="label">
+            <option value="" selected>All labels</option>
+            <option value="inbox">inbox</option>
+            <option value="system">system</option>
+          </select>
+          <label>Label</label>
         </div>
       </div>
       <div class="row" style="margin-top:-12px">
@@ -73,18 +78,18 @@
         <div>
           <a class="btn waves-effect waves-light" id="btnClaimAll">Claim All</a>
           <a class="btn waves-effect red" id="btnDeleteRead">Delete Read</a>
-          <a class="btn modal-trigger" href="#createModal">New Memo</a>
+          <a class="btn modal-trigger" data-testid="create-btn" href="#createModal">New Memo</a>
         </div>
       </div>
 
       <!-- Two columns -->
       <div class="two-col">
         <div class="left-col">
-          <div id="list"></div>
+          <div id="list" data-testid="memo-list"></div>
           <ul class="pagination center" style="margin-top:14px">
-            <li id="prevLi" class="waves-effect"><a href="#!" id="prev">Prev</a></li>
-            <li class="active"><a href="#!" id="pageNum">1</a></li>
-            <li id="nextLi" class="waves-effect"><a href="#!" id="next">Next</a></li>
+            <li id="prevLi" data-testid="pager-prev" class="waves-effect"><a href="#!" id="prev">Prev</a></li>
+            <li data-testid="page-number" class="active"><a href="#!" id="pageNum">1</a></li>
+            <li id="nextLi" data-testid="pager-next" class="waves-effect"><a href="#!" id="next">Next</a></li>
           </ul>
         </div>
         
@@ -97,15 +102,46 @@
       <div id="createModal" class="modal">
         <div class="modal-content">
           <h5 id="modalTitle">New Memo</h5>
-          <div class="input-field"><input id="to" placeholder="Recipient UserId (optional/for send)"/></div>
+          <div class="input-field">
+            <input id="toEmail" type="email" list="userEmails" placeholder="Recipient Email (e.g. friend@example.com)"/>
+            <datalist id="userEmails"></datalist>
+            <span class="helper-text">User Email</span>
+          </div>
           <div class="input-field"><input id="subject" placeholder="Subject" required/></div>
           <div class="input-field"><textarea id="body" class="materialize-textarea" placeholder="Body"></textarea></div>
-          <div class="input-field"><input id="labels" placeholder="Labels (comma separated)"/></div>
           <div class="input-field"><input id="expiresAt" type="datetime-local"/></div>
-          <p>Attachment (one-time claim): <input id="attachmentJson" placeholder='{"type":"currency","payload":{"gold":100}}'/></p>
+
+          <!-- Attachment picker -->
+          <div class="row" id="attChooser" style="margin-top:6px">
+            <div class="col s12">
+              <label class="muted" style="display:block;margin-bottom:6px;">Attachment</label>
+              <div class="att-palette">
+                <button type="button" class="att-btn" data-type="heart" aria-pressed="false" title="Heart">
+                  <span class="emoji" aria-hidden="true">❤️</span><span class="lbl">Heart</span>
+                </button>
+                <button type="button" class="att-btn" data-type="burger" aria-pressed="false" title="Burger">
+                  <span class="emoji" aria-hidden="true">🍔</span><span class="lbl">Burger</span>
+                </button>
+                <button type="button" class="att-btn" data-type="drink" aria-pressed="false" title="Drink">
+                  <span class="emoji" aria-hidden="true">🍹</span><span class="lbl">Drink</span>
+                </button>
+                <button type="button" class="att-btn is-active" data-type="none" aria-pressed="true" title="None">
+                  <span class="emoji" aria-hidden="true">🚫</span><span class="lbl">None</span>
+                </button>
+              </div>
+
+              <div class="qty-wrap">
+                <button type="button" class="qty-btn" id="qtyDec" aria-label="Decrease">−</button>
+                <input id="attQty" type="number" value="0" min="0" step="1" inputmode="numeric" />
+                <button type="button" class="qty-btn" id="qtyInc" aria-label="Increase">+</button>
+              </div>
+              <div id="attHint" class="muted" style="margin-top:6px">No attachment</div>
+            </div>
+          </div>
         </div>
+
         <div class="modal-footer">
-          <a href="#!" id="btnSubmit" class="modal-close waves-effect waves-green btn">Submit</a>
+          <a href="#!" id="btnSubmit" class="modal-close waves-effect waves-green btn">Send</a>
         </div>
       </div>
 
@@ -116,6 +152,7 @@
       <script type="module" src="/js/common/app.js"></script>
       <script type="module" src="/js/common/socket.client.js"></script>
       <script type="module" src="/js/common/header.js"></script>
+      <script src="/socket.io/socket.io.js"></script>
 
       <!-- Back to Dashboard (unified) -->
       <script>
@@ -129,9 +166,6 @@
           }
         })();
       </script>
-      <script src="/socket.io/socket.io.js"></script>
-      <script type="module" src="/js/common/app.js"></script>
-      <script type="module" src="/js/common/socket.client.js"></script>
       
       <!--nav drop down-->
       <script>
@@ -145,17 +179,54 @@
           M.Modal.init(document.querySelectorAll('.modal'), {});
         });
       </script>
+
+      <script type="module">
+        import { getHeaders, getUserFromStorage, authHeaders } from '/js/memo/memo.api.js';
+        window.getHeaders = getHeaders;
+        window.getUserFromStorage = getUserFromStorage;
+        window.authHeaders = authHeaders;
+      </script>
+
       <script>
         
         const API = (p)=> `/api${p}`;
 
         // Headers: JWT if present; else dev mock x-user-id
-        function getHeaders() {
-          const h = { 'Content-Type':'application/json' };
-          const token = localStorage.getItem('jwt');
-          if (token) h['Authorization'] = `Bearer ${token}`;
-          if (window.DEMO_USER_ID) h['x-user-id'] = window.DEMO_USER_ID; // mock auth fallback
-          return h;
+        function setUser(u) { localStorage.setItem('lp_user', JSON.stringify(u || {})); }
+        function logout()   { localStorage.removeItem('lp_user'); }
+        async function doLogin(email, password) {
+          const r = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const j = await r.json();
+          if (!r.ok) throw new Error(j.message || 'Login failed');
+
+          setUser({ id: j.user._id, email: j.user.email, role: j.user.role || 'user' });
+        }
+
+        function currentUser() {
+          try { return JSON.parse(localStorage.getItem('lp_user') || '{}'); }
+          catch { return {}; }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+          const u = window.getUserFromStorage ? window.getUserFromStorage() : null;
+          const el = document.querySelector('#navbarUser'); 
+          if (!el) return;
+
+          if (u?.email) {
+            const name = u.email.split('@')[0];
+            el.textContent = name;
+          } else {
+            el.textContent = 'Guest';
+          }
+        });
+
+        function doLogout() {
+          localStorage.removeItem('lp_user');
         }
 
         let page = 1;
@@ -172,7 +243,7 @@
 
           document.getElementById('search').addEventListener('input', debounce(load, 300));
           document.getElementById('sort').addEventListener('change', load);
-          document.getElementById('label').addEventListener('input', debounce(load, 300));
+          document.getElementById('label').addEventListener('change', load);
           document.getElementById('unreadOnly').addEventListener('change', load);
           document.getElementById('includeExpired').addEventListener('change', load);
           document.getElementById('btnClaimAll').onclick = claimAll;
@@ -188,7 +259,7 @@
           };
           document.getElementById('btnSubmit').onclick = submitMemo;
 
-          // polling notifications (push style refresh)
+          // polling notifications (push-style refresh)
           setInterval(pollNotifs, 4000);
 
           // unread heartbeat
@@ -198,6 +269,12 @@
           document.addEventListener('visibilitychange', () => {
             if (!document.hidden) refreshUnreadBadge(true);
           });
+
+          initAttachmentPicker();
+          const btnSubmit = document.getElementById('btnSubmit');
+          if (btnSubmit) btnSubmit.onclick = submitMemo;
+
+          initUserEmailSuggest();
         });
 
         let loadAbort;
@@ -205,7 +282,7 @@
 
         async function load() {
           if (listLoading) {
-            try { loadAbort?.abort(); } catch(_) {}
+            try { loadAbort?.abort(); } catch (_) {}
           }
           listLoading = true;
           const seq = ++loadSeq;
@@ -225,7 +302,7 @@
             selectedId = null;
             renderDetailPlaceholder();
           };
-          
+
           const showFail = (msg='Failed to load.') => {
             list.innerHTML = `
               <div style="text-align:center; padding:40px; color:#e53935">
@@ -237,16 +314,15 @@
           };
 
           try {
-            const q = buildQuery(page, 10);
+            const q = buildQuery(page, 4);
+            console.log('[load] about to fetch', `/api/memos?${q}`, getHeaders()); // ← inspect headers
+
             const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders() });
 
-            // 204/404 視為「沒有資料」而不是錯誤
             if (res.status === 204 || res.status === 404) {
               document.getElementById('pageNum').textContent = String(page);
-              const prevLi = document.getElementById('prevLi');
-              const nextLi = document.getElementById('nextLi');
-              if (prevLi) prevLi.classList.toggle('disabled', page <= 1);
-              if (nextLi) nextLi.classList.add('disabled');
+              (document.getElementById('prevLi')||{}).classList?.toggle('disabled', page <= 1);
+              (document.getElementById('nextLi')||{}).classList?.add('disabled');
               showEmpty();
               return;
             }
@@ -257,28 +333,23 @@
               return;
             }
 
-            // 解析 JSON；若回空字串，也不會炸
             const json = await res.json().catch(()=> ({}));
             const items = json.data || json.items || [];
-            const pageInfo = json.pageInfo || json.meta || { page, pageSize: 10, total: items.length, hasNext: false };
+            const pageInfo = json.pageInfo || json.meta || { page, pageSize: 4, total: items.length, hasNext: false };
 
-            // 空結果 → 正常「No data」
-            if (!items || items.length === 0 || Number(pageInfo.total) === 0) {
+            if (!items.length || Number(pageInfo.total) === 0) {
               document.getElementById('pageNum').textContent = String(pageInfo.page || page);
-              const prevLi = document.getElementById('prevLi');
-              const nextLi = document.getElementById('nextLi');
-              if (prevLi) prevLi.classList.add('disabled');
-              if (nextLi) nextLi.classList.add('disabled');
+              (document.getElementById('prevLi')||{}).classList?.add('disabled');
+              (document.getElementById('nextLi')||{}).classList?.add('disabled');
               showEmpty();
               return;
             }
 
-            // 有資料 → 正常渲染 + 分頁狀態
             document.getElementById('pageNum').textContent = pageInfo.page;
             const prevLi = document.getElementById('prevLi') || document.getElementById('prev')?.parentElement;
             const nextLi = document.getElementById('nextLi') || document.getElementById('next')?.parentElement;
-            if (prevLi) prevLi.classList.toggle('disabled', (pageInfo.page || 1) <= 1);
-            if (nextLi) nextLi.classList.toggle('disabled', !pageInfo.hasNext);
+            prevLi?.classList?.toggle('disabled', (pageInfo.page || 1) <= 1);
+            nextLi?.classList?.toggle('disabled', !pageInfo.hasNext);
 
             if (listSummary) listSummary.textContent = `Page ${pageInfo.page} • ${items.length} items`;
             if (seq !== loadSeq) return;
@@ -288,7 +359,8 @@
               renderDetailPlaceholder();
             }
           } catch (e) {
-            showFail();
+            console.error('[load] error', e);
+            showFail(`Failed to load. ${e?.message || ''}`);
           } finally {
             listLoading = false;
           }
@@ -301,8 +373,7 @@
             unreadAbort = new AbortController();
 
             const candidates = [
-              '/memos?unread=true&limit=1&page=1',
-              '/memos?status=unread&limit=1&page=1'
+              '/memos?unread=true&page=1&pageSize=1'
             ];
             for (const path of candidates) {
               const res = await fetch(API(path), { headers: getHeaders(), signal: unreadAbort.signal });
@@ -332,7 +403,7 @@
           q.set('pageSize', size);
 
           const search = document.getElementById('search').value.trim();
-      if (search) q.set('search', search);
+          if (search) q.set('search', search);
 
           const label = document.getElementById('label').value.trim();
           const [sortKey, order] = document.getElementById('sort').value.split(':');
@@ -340,7 +411,7 @@
           const includeExpired = document.getElementById('includeExpired').checked;
 
           if (label) q.set('label', label);
-          if (unreadOnly) q.set('unread','true');     // 若後端只吃 status=unread，改成：q.set('status','unread');
+          if (unreadOnly) q.set('unread','true');     // if backend only accepts status=unread, use: q.set('status','unread');
           if (includeExpired) q.set('includeExpired','true');
           q.set('sort', sortKey);
           q.set('order', order);
@@ -361,7 +432,7 @@
             const fmt = new Intl.DateTimeFormat(undefined, {year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit'});
             
             return `
-              <div class="memo-row ${selectedId===m._id?'selected':''}" onclick="openMemo('${m._id}', this)">
+              <div class="memo-item memo-row ${selectedId===m._id?'selected':''}" onclick="openMemo('${m._id}', this)">
                 <div class="left">
                   <span class="badge ${isUnread ? 'new':''}" data-badge-caption="${isUnread?'Unread':'Read'}"></span>
                   <span class="subject">${escapeHtml(m.subject)}</span>
@@ -384,11 +455,11 @@
         const claimedLocal = new Set();
 
         function renderClaimBtn(m) {
-        if (!hasAttachment(m)) return '';
-        if (isExpired(m)) return `<a class="btn disabled" onclick="event.stopPropagation()">Expired</a>`;
-        if (isClaimed(m)) return `<a class="btn disabled" onclick="event.stopPropagation()">Claimed</a>`;
-        return `<a class="btn" onclick="claim('${m._id}', this, event)">Claim</a>`;
-      }
+          if (!hasAttachment(m)) return '';
+          if (isExpired(m)) return `<a class="btn disabled" onclick="event.stopPropagation()">Expired</a>`;
+          if (isClaimed(m)) return `<a class="btn disabled" onclick="event.stopPropagation()">Claimed</a>`;
+          return `<a class="btn" onclick="claim('${m._id}', this, event)">Claim</a>`;
+        }
 
         function updateUnreadBadge(n) {
           const el = document.getElementById('unreadBadge');
@@ -397,7 +468,7 @@
 
         async function openMemo(id, rowEl) {
           selectedId = id;
-          // 左欄選取樣式
+          // left list selection style
           Array.from(document.querySelectorAll('.memo-row')).forEach(el=> el.classList.remove('selected'));
           if (rowEl) rowEl.classList.add('selected');
           
@@ -436,8 +507,7 @@
             renderAttachmentIcons(m.attachments);
           }
             
-
-          // 你原本會靠後端/重新載入來標已讀；保留未讀刷新
+          // you originally rely on backend/reload to mark as read; keep unread badge refresh
           await refreshUnreadBadge(true);
         }
 
@@ -472,7 +542,6 @@
                 } else if (code === 410 || code === 400) { 
                   btnEl.textContent = 'Expired';
                 } else {
-                  
                   btnEl.textContent = 'Claim';
                   btnEl.classList.remove('disabled');
                   btnEl.removeAttribute('aria-disabled');
@@ -495,41 +564,182 @@
             await refreshUnreadBadge(true);
           }
         }
+        
+        // --- Quick Attachment state ---
+        const attMap = { heart: 0, burger: 0, drink: 0 }; // quantity for each type
+        let currentType = null;                             // current type in focus (null means None)
+
+        function renderAttUI() {
+          // toggle active style for the four buttons
+          const allZero = (attMap.heart|0) === 0 && (attMap.burger|0) === 0 && (attMap.drink|0) === 0;
+
+          document.querySelectorAll('#attChooser .att-btn').forEach(btn => {
+            const t = btn.dataset.type;
+            const active =
+              t === 'none' ? allZero && !currentType
+                          : (currentType === t || attMap[t] > 0);
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+          });
+
+          // quantity input
+          const qtyInput = document.getElementById('attQty');
+          if (!currentType) {
+            qtyInput.disabled = true;
+            qtyInput.value = '0';
+          } else {
+            qtyInput.disabled = false;
+            qtyInput.value = String(attMap[currentType] || 0);
+          }
+
+          // hint text
+          const hint = document.getElementById('attHint');
+          const chips = [];
+          if (attMap.heart > 0)  chips.push(`❤️ Heart +${attMap.heart}`);
+          if (attMap.burger > 0) chips.push(`🍔 Burger +${attMap.burger}`);
+          if (attMap.drink > 0)  chips.push(`🍹 Drink +${attMap.drink}`);
+          hint.textContent = chips.length ? chips.join(' , ') : 'No attachment';
+        }
+
+        function initAttachmentPicker() {
+          // click the four icons
+          document.querySelectorAll('#attChooser .att-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const t = btn.dataset.type;
+
+              if (t === 'none') {
+                // clear and return to None
+                attMap.heart = attMap.burger = attMap.drink = 0;
+                currentType = null;
+                renderAttUI();
+                return;
+              }
+
+              // switch focus to the new type; if its current value is 0, set to 1 for faster + tapping
+              if (currentType !== t) currentType = t;
+              if ((attMap[t] || 0) === 0) attMap[t] = 1;
+
+              renderAttUI();
+            });
+          });
+
+          // plus/minus (supports press-and-hold)
+          const qtyInput = document.getElementById('attQty');
+          const btnDec   = document.getElementById('qtyDec');
+          const btnInc   = document.getElementById('qtyInc');
+
+          let holdTimer = null;
+          const step = (d) => {
+            if (!currentType) return;
+            attMap[currentType] = Math.max(0, (attMap[currentType] || 0) + d);
+            renderAttUI();
+          };
+          const startHold = (d) => { step(d); holdTimer = setInterval(() => step(d), 180); };
+          const stopHold  = () => { if (holdTimer) clearInterval(holdTimer); holdTimer = null; };
+
+          btnDec.addEventListener('pointerdown', () => startHold(-1));
+          btnDec.addEventListener('pointerup', stopHold);
+          btnDec.addEventListener('pointerleave', stopHold);
+
+          btnInc.addEventListener('pointerdown', () => startHold(+1));
+          btnInc.addEventListener('pointerup', stopHold);
+          btnInc.addEventListener('pointerleave', stopHold);
+
+          // manual numeric input
+          qtyInput.addEventListener('input', () => {
+            if (!currentType) return;
+            const v = parseInt(qtyInput.value || '0', 10);
+            attMap[currentType] = Number.isFinite(v) ? Math.max(0, v) : 0;
+            renderAttUI();
+          });
+
+          // initial render (default None)
+          renderAttUI();
+        }
+
+        function getAttachmentsFromUI() {
+          const arr = [];
+          if (attMap.heart  > 0) arr.push({ type: 'heart', payload: { heart:  attMap.heart  } });
+          if (attMap.burger > 0) arr.push({ type: 'item',  payload: { burger: attMap.burger } });
+          if (attMap.drink  > 0) arr.push({ type: 'item',  payload: { drink:  attMap.drink  } });
+          return arr;
+        }
+
+        // --- Autocomplete for recipient ---
+        function initUserEmailSuggest() {
+          const inp = document.getElementById('toEmail');
+          const box = document.getElementById('userEmails');
+          if (!inp || !box) return;
+
+          const doFetch = debounce(async (q) => {
+            if (!q || q.length < 2) { box.innerHTML = ''; return; }
+            try {
+              const res = await fetch(API(`/auth/users?search=${encodeURIComponent(q)}`), { headers: getHeaders() });
+              const json = await res.json().catch(()=>({}));
+              const items = json.data || [];
+              // fill datalist options
+              box.innerHTML = items.map(u => `<option value="${u.email}"></option>`).join('');
+            } catch {}
+          }, 200);
+
+          inp.addEventListener('input', () => doFetch(inp.value.trim()));
+        }
 
         async function submitMemo() {
-          const to = document.getElementById('to').value.trim();
-          const subject = document.getElementById('subject').value.trim();
-          const bodyText = document.getElementById('body').value.trim();
-          const labelsArr = document.getElementById('labels').value.split(',').map(s=>s.trim()).filter(Boolean);
-          const expiresVal = document.getElementById('expiresAt').value;
-          const attOne = parseJsonOrNull(document.getElementById('attachmentJson').value);
-          const attachments = attOne ? (Array.isArray(attOne) ? attOne : [attOne]) : []; 
+          const toEmail   = (document.getElementById('toEmail')?.value || '').trim();
+          const subject   = (document.getElementById('subject')?.value || '').trim();
+          const bodyText  = (document.getElementById('body')?.value || '').trim();
+          const expiresVal = (document.getElementById('expiresAt')?.value || '').trim();
+
+          // ✅ get attachments from UI
+          const attachments = getAttachmentsFromUI();
 
           const payload = {
-            recipientId: to || undefined, 
             subject,
             body: bodyText,
-            labels: labelsArr.length ? labelsArr : ['inbox'],
             attachments,
             expiresAt: expiresVal ? new Date(expiresVal).toISOString() : null
           };
+          if (toEmail) payload.recipientEmail = toEmail;
 
-          const endpoint = to ? '/memos/send' : '/memos';
-          const res = await fetch(API(endpoint), { method:'POST', headers: getHeaders(), body: JSON.stringify(payload) });
-          const data = await res.json().catch(()=> ({}));
-          if (res.ok) {
-            M.toast({ html: 'Created!' });
-            page = 1;
-            ['to','subject','body','labels','expiresAt','attachmentJson'].forEach(id=>{
-              const el = document.getElementById(id);
-              if (el) el.value = '';
+          const endpoint = toEmail ? '/memos/send' : '/memos';
+
+          try {
+            const res = await fetch(API(endpoint), {
+              method: 'POST',
+              headers: getHeaders(),
+              body: JSON.stringify(payload)
             });
-            M.toast({ html: to ? 'Sent to friend!' : 'Created!' });
-            await load(); // 送出後刷新列表
-            M.updateTextFields();
-            await refreshUnreadBadge(true);
-          } else {
-            M.toast({ html: `Error: ${data.message || data.code || 'Failed to create memo'}` });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+              const code = data.code || res.status;
+              const msg = code === 'USER_NOT_FOUND' ? 'Recipient email not found'
+                      : code === 'VALIDATION_ERROR' ? (data.message || 'Validation error')
+                      : (data.message || `Failed: ${code}`);
+              M.toast({ html: msg });
+              return;
+            }
+
+            M.toast({ html: toEmail ? 'Sent to friend!' : 'Created!' });
+
+            // ✅ reset picker
+            attMap.heart = attMap.burger = attMap.drink = 0;
+            currentType = null;
+            renderAttUI();
+
+            // clear form
+            ['toEmail','subject','body','expiresAt'].forEach(id=>{
+              const el = document.getElementById(id); if (el) el.value = '';
+            });
+            M.updateTextFields?.();
+
+            if (typeof page !== 'undefined') page = 1;
+            await load();
+            await refreshUnreadBadge?.(true);
+
+          } catch (e) {
+            M.toast({ html: `Request failed: ${e.message || e}` });
           }
         }
 
@@ -566,8 +776,9 @@
               if (t === 'item' && a.payload) {
                 for (const k of Object.keys(a.payload)) {
                   const v = a.payload[k];
-                  if (k.toLowerCase().includes('burger') || k.toLowerCase().includes('food')) pushChip('🍔', `+${v}`);
-                  else if (k.toLowerCase().includes('soft drink') || k.toLowerCase().includes('drinks')) pushChip('🍹', `+${v}`);
+                  const key = k.toLowerCase();
+                  if (key.includes('burger') || key.includes('food')) pushChip('🍔', `+${v}`);
+                  else if (key.includes('drink')) pushChip('🍹', `+${v}`);
                   else pushChip('🎁', `${k}: +${v}`);
                 }
               } else if (t === 'heart' && a.payload) {
@@ -594,15 +805,15 @@
         }
 
         function isExpired(m) {
-        return !!(m.expiresAt && new Date(m.expiresAt).getTime() <= Date.now());
-      }
+          return !!(m.expiresAt && new Date(m.expiresAt).getTime() <= Date.now());
+        }
 
         function hasAttachment(m) {
           return Array.isArray(m.attachments) ? m.attachments.length > 0 : !!m.attachments;
         }
 
         function isClaimed(m) {
-          // 陣列：全部已領；物件：claimed=true；或本地暫存（成功領取後先暫時標記）
+          // array: all items claimed; object: claimed=true; or local temp flag (set after successful claim)
           const fromArray = Array.isArray(m.attachments) && m.attachments.length > 0
             ? m.attachments.every(a => a?.claimed === true)
             : false;
@@ -665,46 +876,58 @@
           }
         }
 
-        async function deleteRead(){
-        try {
-          const r = await fetch(API('/memos/delete-read'), { method:'DELETE', headers:getHeaders() });
-          if (r.ok) { M.toast({html:'Deleted read memos'}); await refreshUnreadBadge(true); return; }
-        } catch {}
+        async function deleteRead() {
+          try {
+            const r = await fetch(API('/memos/delete-read'), { method: 'DELETE', headers: getHeaders() });
+            if (r.ok) { 
+              M.toast({ html: 'Deleted read memos' });
+              await load();
+              if (selectedId) { selectedId = null; renderDetailPlaceholder(); }
+              await refreshUnreadBadge(true);
+              return; 
+            }
+          } catch {}
 
-        let pageNum = 1, hasNext = true, deleted = 0, pageSize = 50;
-        while (hasNext && pageNum <= 50) {
-          const q = buildQuery(pageNum, pageSize);
-          q.set('status','read');
-          const res = await fetch(API(`/memos?${q.toString()}`), { headers:getHeaders() });
-          if (!res.ok) break;
-          const json = await res.json().catch(()=>({}));
-          const items = json.data || json.items || [];
-          hasNext = (json.pageInfo && json.pageInfo.hasNext) || (items.length === pageSize);
-          pageNum++;
+          let pageNum = 1, hasNext = true, deleted = 0, pageSize = 50;
+          while (hasNext && pageNum <= 50) {
+            const q = buildQuery(pageNum, pageSize);
+            q.delete('unread');
+            q.set('unread', 'false');
+            const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders() });
+            if (!res.ok) break;
+            const json = await res.json().catch(()=>({}));
+            const items = json.data || json.items || [];
+            hasNext = (json.pageInfo && json.pageInfo.hasNext) || (items.length === pageSize);
+            pageNum++;
 
-          for (const m of items) {
-            try { const r = await fetch(API(`/memos/${m._id}`), { method:'DELETE', headers:getHeaders() }); if (r.ok) deleted++; } catch {}
+            for (const m of items) {
+              try {
+                const r = await fetch(API(`/memos/${m._id}`), { method: 'DELETE', headers: getHeaders() });
+                if (r.ok) deleted++;
+              } catch {}
+            }
           }
+          M.toast({ html: `Deleted ${deleted} read memos` });
+          await load(); 
+          await refreshUnreadBadge(true);
         }
-        M.toast({ html: `Deleted ${deleted} read memos` });
-        await refreshUnreadBadge(true);
-      }
+
 
         // utils
-        function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
+        function escapeHtml(s){ const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }; return (s||'').replace(/[&<>\"']/g, c => map[c]);}
         function parseJsonOrNull(s){ try{ return s?JSON.parse(s):null }catch(_){ return null } }
         function debounce(fn, delay){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(this,a),delay); }; }
       </script>
 
       <script>
-        // 讓怪獸貓的眼睛跟隨滑鼠
+        // Make the monster cat's eyes follow the cursor
         (function () {
           const wrap = document.querySelector('.pet-wrap');
           if (!wrap) return;
 
           const eyes = Array.from(wrap.querySelectorAll('.eye'));
 
-          // 計算並限制位移在半徑內
+          // Compute and clamp the displacement within a radius
           function movePupil(e) {
             const rect = wrap.getBoundingClientRect();
             const mouseX = (e.touches?.[0]?.clientX ?? e.clientX) - rect.left;
@@ -714,32 +937,32 @@
               const pupil = eye.querySelector('.pupil');
               if (!pupil) return;
 
-              // 眼睛中心（相對於 wrap）
+              // Eye center (relative to wrap)
               const eyeRect = eye.getBoundingClientRect();
               const cx = eyeRect.left - rect.left + eyeRect.width / 2;
               const cy = eyeRect.top  - rect.top  + eyeRect.height / 2;
 
-              // 指向向量
+              // Direction vector
               let dx = mouseX - cx;
               let dy = mouseY - cy;
 
-              // 限制最大位移（半徑）
+              // Limit max displacement (radius)
               const r = parseFloat(getComputedStyle(eye).getPropertyValue('--pupil-move')) || 8;
               const len = Math.hypot(dx, dy) || 1;
               const ux = dx / len, uy = dy / len;
               const tx = Math.min(len, r) * ux;
               const ty = Math.min(len, r) * uy;
 
-              // 以瞳孔自身中心為基準做位移
+              // Translate based on the pupil's own center
               pupil.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px))`;
             });
           }
 
-          // 滑鼠、觸控皆支援
+          // Support mouse and touch
           document.addEventListener('mousemove', movePupil);
           document.addEventListener('touchmove', movePupil, { passive: true });
 
-          // 離開區域時回到中心
+          // Return to center when leaving the area
           wrap.addEventListener('mouseleave', () => {
             wrap.querySelectorAll('.pupil').forEach(p => {
               p.style.transform = 'translate(-50%, -50%)';

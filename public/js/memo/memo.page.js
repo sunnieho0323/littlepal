@@ -1,5 +1,5 @@
 // public/js/memo/memo.page.js
-import { listMemos, createMemo, completeMemo, deleteMemo } from './memo.api.js';
+import { listMemos, createMemo, claimMemo, deleteMemoApi, getMemo } from './memo.api.js';
 import { toast } from '../common/app.js';
 import './memo.socket.js'; // if you want to saprately handle socket events
 
