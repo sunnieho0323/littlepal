@@ -1,12 +1,12 @@
 :root {
-  --bg: linear-gradient(180deg, #fff8e1 0%, #ffe0b2 100%);  /* 背景从浅米黄到浅橙(#fff8e1, #ffe0b2) */
-  --card: #ffffffaa;         /* 卡片白色 */
-  --muted: #6b7280;        /* 灰色文字 */
-  --text: #1f2937;         /* 深灰正文 */
-  --accent: #11dfee;       /* 按钮绿色 */
-  --accent-press: #16a34a; /* 按钮按下绿色 */
-  --border: #e5e7eb;       /* 卡片边框浅灰 */
-  --danger: #ef4444;       /* 错误提示红色 */
+  --bg: linear-gradient(180deg, #fff8e1 0%, #ffe0b2 100%);  /* Background from light cream to light orange */
+  --card: #ffffffaa;         /* Card white */
+  --muted: #6b7280;        /* Gray text */
+  --text: #1f2937;         /* Dark gray body text */
+  --accent: #11dfee;       /* Button green */
+  --accent-press: #16a34a; /* Button pressed green */
+  --border: #e5e7eb;       /* Card border light gray */
+  --danger: #ef4444;       /* Error message red */
 }
 
 *{box-sizing:border-box}
@@ -30,8 +30,8 @@ input[type="email"], input[type="password"] {
   width: 100%;
   padding: 12px 14px;
   border: 1px solid var(--border);
-  background: #ffffff;     /* 白色背景 */
-  color: #000000;          /* 黑色文字 */
+  background: #ffffff;     /* White background */
+  color: #000000;          /* Black text */
   border-radius: 12px;
   outline: none;
 }
@@ -41,9 +41,9 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 .password input{flex:1}
 
 .password button {
-  border: 1px solid #d1d5db;   /* 浅灰边框 (#d1d5db) */
-  background: #ffffff;         /* 白色背景 */
-  color: #374151;              /* 深灰文字/图标 */
+  border: 1px solid #d1d5db;   /* Light gray border */
+  background: #ffffff;         /* White background */
+  color: #374151;              /* Dark gray text/icon */
   padding: 0 12px;
   height: 42px;
   border-radius: 10px;
@@ -52,8 +52,8 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 }
 
 .password button:hover {
-  background: #f3f4f6;         /* hover 时浅灰背景 */
-  color: #111827;              /* 更深灰色 */
+  background: #f3f4f6;         /* Light gray background on hover */
+  color: #111827;              /* Darker gray */
 }
 
 .password button:active {
@@ -68,7 +68,7 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 .primary {
   width: 100%;
   margin-top: 6px;
-  background: #26a69a;      /* Materialize 默认绿色 */
+  background: #26a69a;      /* Materialize default green */
   color: #fff;
   border: none;
   padding: 12px 16px;
@@ -78,18 +78,18 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.25)}
   transition: .15s;
 }
 .primary:hover {
-  background: #2bbbad;      /* hover 颜色 */
+  background: #2bbbad;      /* Hover color */
 }
 
 .alert {
-  background: #ffffff;        /* 白色背景 */
-  color: #000000;             /* 黑色文字 */
-  border-left: 4px solid var(--danger); /* 红色边框，保持原有变量 */
+  background: #ffffff;        /* White background */
+  color: #000000;             /* Black text */
+  border-left: 4px solid var(--danger); /* Red border, keeping original variable */
   padding: 10px 12px;
   border-radius: 8px;
   margin: 6px 0;
   font-size: .92rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* 轻微阴影，让它更明显 */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow to make it more visible */
 }
 
 .meta{color:var(--muted);text-align:center;margin-top:14px}
