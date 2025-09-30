@@ -43,23 +43,8 @@ App will be running at:
 👉 http://localhost:3000
 
 ---
-## 📮 Memo API (Jessica's Feature)
 
-The Memo system lets each user manage their own mailbox (CRUD + claim + expiry).
-
-### Endpoints
-
-| Method | Endpoint                  | Description                  |
-|--------|---------------------------|------------------------------|
-| GET    | /api/memos                | List memos (supports search, sort, pagination) |
-| GET    | /api/memos/:id            | Get a single memo            |
-| POST   | /api/memos                | Create a new memo            |
-| PATCH  | /api/memos/:id            | Update a memo (e.g. mark read) |
-| DELETE | /api/memos/:id            | Delete a memo                |
-| POST   | /api/memos/:id/claim      | Claim an attachment (once only) |
-| DELETE | /api/memos/delete-read    | Bulk delete all read memos   |
-
-## Running Playwright Tests:
+### 5. Run Playwright Tests:
 Run all E2E tests:
 ```bash
 npx playwright test
@@ -127,7 +112,7 @@ Project Management: Trello (branches mapped 1:1 with cards)
 ---
 👥 Team Guidelines
 
-Branching Strategy
+### Branching Strategy
 
 Main branch (main) must always be stable and runnable.
 
@@ -137,7 +122,7 @@ Example: feat/memo-crud, feat/pet-game, feat/chat-ai, test/e2e
 
 Branch names must match Trello cards.
 
-Commits
+### Commits
 
 Use clear commit messages:
 
@@ -149,7 +134,7 @@ test(chat): add E2E test for conversation flow
 
 Code Style
 
-Backend:
+### Backend:
 
 Models → PascalCase (e.g., User.js)
 
@@ -157,7 +142,7 @@ Controllers/Services → PascalCase + suffix (e.g., MemoController.js)
 
 Routes → kebab-case (e.g., memos.routes.js)
 
-Frontend:
+### Frontend:
 
 Separate by feature (public/js/memo/*)
 
@@ -165,13 +150,13 @@ Use data-testid attributes for E2E testing.
 
 Use Prettier + ESLint (npm run format before pushing).
 
-Environment Variables
+### Environment Variables
 
 Never commit .env to Git.
 
 Only commit .env.example.
 
-Pull Requests
+## Pull Requests
 
 Small, frequent PRs.
 
@@ -181,7 +166,7 @@ Always attach screenshots or test results.
 
 ---
 🙋 Member Contribution Guidelines
-Owen (Auth - Pass level)
+## Owen (Auth - Pass level)
 
 Implement basic login/register.
 
@@ -191,7 +176,21 @@ Save token + user in localStorage.
 
 Redirect to / (index page) after login.
 
-Jessica (Memos - HD target)
+## Jessica (Memos + testing - HD target)
+
+The Memo system lets each user manage their own mailbox (CRUD + claim + expiry).
+
+### Endpoints
+
+| Method | Endpoint                  | Description                  |
+|--------|---------------------------|------------------------------|
+| GET    | /api/memos                | List memos (supports search, sort, pagination) |
+| GET    | /api/memos/:id            | Get a single memo            |
+| POST   | /api/memos                | Create a new memo            |
+| PATCH  | /api/memos/:id            | Update a memo (e.g. mark read) |
+| DELETE | /api/memos/:id            | Delete a memo                |
+| POST   | /api/memos/:id/claim      | Claim an attachment (once only) |
+| DELETE | /api/memos/delete-read    | Bulk delete all read memos   |
 
 Full CRUD for memos.
 
@@ -203,7 +202,7 @@ Write unit tests for MemoService.
 
 Provide a polished UI with Materialize.
 
-Vindya (Pet Game - HD target)
+## Vindya (Pet Game - HD target)
 
 Pet feeding & playing functions.
 
@@ -215,7 +214,7 @@ Provide E2E tests (feeding & playing workflow).
 
 Socket events to update user’s pet state in real time.
 
-Sunnie (Chat + Testing - HD target, Team Lead)
+## Sunnie (Chat + Testing - HD target, Team Lead)
 
 AI chat integration with OpenAI API.
 
