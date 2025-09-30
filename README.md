@@ -43,6 +43,36 @@ App will be running at:
 👉 http://localhost:3000
 
 ---
+## 📮 Memo API (Jessica's Feature)
+
+The Memo system lets each user manage their own mailbox (CRUD + claim + expiry).
+
+### Endpoints
+
+| Method | Endpoint                  | Description                  |
+|--------|---------------------------|------------------------------|
+| GET    | /api/memos                | List memos (supports search, sort, pagination) |
+| GET    | /api/memos/:id            | Get a single memo            |
+| POST   | /api/memos                | Create a new memo            |
+| PATCH  | /api/memos/:id            | Update a memo (e.g. mark read) |
+| DELETE | /api/memos/:id            | Delete a memo                |
+| POST   | /api/memos/:id/claim      | Claim an attachment (once only) |
+| DELETE | /api/memos/delete-read    | Bulk delete all read memos   |
+
+### Running Playwright Tests for Memo
+Run all E2E tests (including Memo):
+
+```bash
+Copy code
+npx playwright test
+```
+### Run only Memo tests:
+```bash
+Copy code
+npx playwright test tests/memo.spec.js
+```
+
+---
 🛠️ Tech Stack
 
 Backend: Node.js + Express
