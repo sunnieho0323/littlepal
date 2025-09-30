@@ -230,8 +230,4 @@ Maintain README, .env.example, and team guidelines.
 ---
 📑 Documentation
 
-SRS.md → Functional & non-functional requirements
-
-TEST_REPORT.md → E2E coverage with screenshots/videos
-
-ARCHITECTURE.md → System design & MVC structure
+/test reports/TEST_REPORT.md → E2E coverage with screenshots
