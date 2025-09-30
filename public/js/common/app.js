@@ -40,7 +40,7 @@ export function logout() {
   localStorage.removeItem('user');
   localStorage.removeItem('token');
   localStorage.removeItem('lp_user');
-  location.href = '/login.html'; // Owen after logout go to login page
+  location.replace('/login.html'); // Owen after logout go to login page
 }
 
 // index avatar show user info

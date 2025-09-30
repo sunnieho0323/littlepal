@@ -317,7 +317,7 @@
             const q = buildQuery(page, 4);
             console.log('[load] about to fetch', `/api/memos?${q}`, getHeaders()); // ← inspect headers
 
-            const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders() });
+            const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders(), cache:'no-store' });
 
             if (res.status === 204 || res.status === 404) {
               document.getElementById('pageNum').textContent = String(page);
@@ -893,7 +893,7 @@
             const q = buildQuery(pageNum, pageSize);
             q.delete('unread');
             q.set('unread', 'false');
-            const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders() });
+            const res = await fetch(API(`/memos?${q.toString()}`), { headers: getHeaders(), cache:'no-store' });
             if (!res.ok) break;
             const json = await res.json().catch(()=>({}));
             const items = json.data || json.items || [];
