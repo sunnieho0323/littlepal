@@ -1,7 +1,5 @@
-// app/services/pet.service.js
 const Pet = require('../../models/Pet');
 
-// simple cooldown map to avoid spamming actions
 const lastAction = new Map();
 const COOLDOWN_MS = 3000;
 
@@ -14,21 +12,25 @@ const gate = (key) => {
   return true;
 };
 
-// translate mood number into an emotion string for the heart
 function moodToEmotion(mood) {
   if (mood >= 70) return 'happy';
   if (mood >= 40) return 'neutral';
   return 'sad';
 }
 
-// CRUD + actions
-async function getPet(id) {
-  return Pet.findById(id);
+async function getByOwner(ownerId) {
+  return Pet.findOne({ ownerId });
 }
 
 async function createPet(data) {
-  if (!data.ownerId) data.ownerId = 'demo-user'; // fallback if no auth yet
+  if (!data.ownerId) data.ownerId = 'demo-user';
+  const existing = await Pet.findOne({ ownerId: data.ownerId });
+  if (existing) throw new Error('You already have a pet. Release it first.');
   return Pet.create(data);
+}
+
+async function deletePet(ownerId) {
+  return Pet.findOneAndDelete({ ownerId });
 }
 
 async function feedPet(id) {
@@ -36,7 +38,7 @@ async function feedPet(id) {
   const p = await Pet.findById(id);
   if (!p) throw new Error('Pet not found');
   p.hunger = clamp(p.hunger - 15);
-  p.mood = clamp(p.mood + 5);
+  p.mood   = clamp(p.mood + 5);
   p.lastFedAt = new Date();
   await p.save();
   return p;
@@ -47,7 +49,7 @@ async function drinkPet(id) {
   const p = await Pet.findById(id);
   if (!p) throw new Error('Pet not found');
   p.thirst = clamp(p.thirst - 20);
-  p.mood = clamp(p.mood + 4);
+  p.mood   = clamp(p.mood + 4);
   p.lastDrankAt = new Date();
   await p.save();
   return p;
@@ -57,7 +59,7 @@ async function playWithPet(id) {
   if (!gate(`${id}:play`)) throw new Error('Too soon to play');
   const p = await Pet.findById(id);
   if (!p) throw new Error('Pet not found');
-  p.mood = clamp(p.mood + 12);
+  p.mood   = clamp(p.mood + 12);
   p.hunger = clamp(p.hunger + 3);
   p.thirst = clamp(p.thirst + 5);
   p.lastPlayedAt = new Date();
@@ -66,10 +68,12 @@ async function playWithPet(id) {
 }
 
 module.exports = {
-  getPet,
+  getByOwner,
   createPet,
+  deletePet,
   feedPet,
   drinkPet,
   playWithPet,
-  moodToEmotion
+  moodToEmotion,
 };
+

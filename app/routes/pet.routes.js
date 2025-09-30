@@ -1,11 +1,14 @@
-const r = require('express').Router();
-const c = require('../controllers/PetController');
+const router = require('express').Router();
+const PetController = require('../controllers/PetController');
 
-r.post('/', c.create);       // POST /api/pet
-r.get('/:id', c.getOne);     // GET  /api/pet/:id
-r.post('/:id/feed',  c.feed);
-r.post('/:id/drink', c.drink);
-r.post('/:id/play',  c.play);
+router.get('/by-owner/:ownerId', PetController.getMine);
+router.get('/:id', PetController.getById);        
 
-module.exports = r;
+router.post('/', PetController.create);
+router.delete('/by-owner/:ownerId', PetController.delete);
 
+router.patch('/:id/feed', PetController.feed);
+router.patch('/:id/drink', PetController.drink);
+router.patch('/:id/play', PetController.play);
+
+module.exports = router;

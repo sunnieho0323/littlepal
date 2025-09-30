@@ -1,41 +1,47 @@
 (function () {
   const qs = new URLSearchParams(location.search);
-  const petId = qs.get('petId');
+  let petId = qs.get('petId'); 
 
-  const petName = document.getElementById('petName');
+  const petName     = document.getElementById('petName');
   const emotionChip = document.getElementById('emotionChip');
-  const emotionLabel = document.getElementById('emotionLabel');
-  const heart = document.getElementById('heart'); // heart chip
+  const emotionLabel= document.getElementById('emotionLabel');
+  const heart       = document.getElementById('heart');
 
-  const moodFill = document.getElementById('moodFill');
-  const hungerFill = document.getElementById('hungerFill');
-  const thirstFill = document.getElementById('thirstFill');
+  const moodFill    = document.getElementById('moodFill');
+  const hungerFill  = document.getElementById('hungerFill');
+  const thirstFill  = document.getElementById('thirstFill');
 
-  const feedBtn  = document.getElementById('feedBtn');
-  const drinkBtn = document.getElementById('drinkBtn');
-  const playBtn  = document.getElementById('playBtn');
-  const log = document.getElementById('log');
+  const feedBtn     = document.getElementById('feedBtn');
+  const drinkBtn    = document.getElementById('drinkBtn');
+  const playBtn     = document.getElementById('playBtn');
+  const log         = document.getElementById('log');
 
-  const inviteBtn     = document.getElementById('inviteBtn');
-  const friendInput   = document.getElementById('friendPetId');
+  const inviteBtn   = document.getElementById('inviteBtn');
+  const friendInput = document.getElementById('friendPetId');
   const joinFriendBtn = document.getElementById('joinFriendBtn');
-  const fxLayer       = document.getElementById('fxLayer');
+  const fxLayer     = document.getElementById('fxLayer');
 
-  if (!petId) {
-    M.toast({ html: 'Add ?petId=... to the URL to load your pet.' });
-    [feedBtn, drinkBtn, playBtn].forEach(b => b?.classList.add('disabled'));
-    return;
-  }
+  const adoptForm   = document.getElementById('adopt-form');
+  const releaseBtn  = document.getElementById('release-btn');
+  const petNameInput= document.getElementById('pet-name');
+  const petTypeInput= document.getElementById('pet-type');
 
-  // Realtime via global channel (server emits `pet:update` for all)
+  const OWNER_ID = 'demo-user';
+
   const socket = io();
   socket.on('pet:update', (state) => {
-    if (state?.petId === petId) render(state, '🔔 realtime update');
+    if (state?._id === petId) render(state, '🔔 realtime update');
+  });
+  socket.on('pet:released', (info) => {
+    if (info?.ownerId === OWNER_ID) {
+      petId = null;
+      render({ name: 'No Pet', type: '', mood: 0, hunger: 0, thirst: 0 }, 'Pet released');
+    }
   });
 
   function pulse(el, cls) {
     el.classList.remove(cls);
-    void el.offsetWidth; // reflow to restart animation
+    void el.offsetWidth;
     el.classList.add(cls);
     setTimeout(() => el.classList.remove(cls), 500);
   }
@@ -57,7 +63,6 @@
     else emotionChip.classList.add('is-sad');
 
     emotionLabel.textContent = emotion;
-
     heart.textContent = emotion === 'happy' ? '❤' : (emotion === 'neutral' ? '♡' : '♥');
     pulse(heart, 'pulse');
   }
@@ -67,15 +72,14 @@
   }
 
   function render(pet, note) {
-    petName.textContent = `${pet.name || 'Pet'} (${pet.type || 'cat'})`;
-    setBar(moodFill, pet.mood);
-    setBar(hungerFill, pet.hunger);
-    setBar(thirstFill, pet.thirst ?? 50);
+    petName.textContent = pet.name ? `${pet.name} (${pet.type})` : 'No Pet';
+    setBar(moodFill, pet.mood || 0);
+    setBar(hungerFill, pet.hunger || 0);
+    setBar(thirstFill, pet.thirst ?? 0);
     if (pet.emotion) setEmotion(pet.emotion);
     if (note) log.textContent = `${note}: mood ${pet.mood}, hunger ${pet.hunger}, thirst ${pet.thirst}`;
   }
 
-  // Basic cooldown to prevent spam clicking (matches service ~3s)
   let cooling = false;
   function withCooldown(ms, fn) {
     return async () => {
@@ -88,6 +92,7 @@
   }
 
   async function load() {
+    if (!petId) return;
     try {
       const data = await PetAPI.getPet(petId);
       render(data, 'Loaded');
@@ -98,6 +103,7 @@
 
   const action = (apiCall, label, emoji, animTarget) =>
     withCooldown(900, async () => {
+      if (!petId) return M.toast({ html: 'No pet yet. Adopt one first.' });
       const data = await apiCall(petId);
       render(data, label);
       if (animTarget) pulse(animTarget, 'pop');
@@ -109,8 +115,53 @@
   drinkBtn.addEventListener('click', action(PetAPI.drink, '💧 Drank', '💧', drinkBtn));
   playBtn .addEventListener('click', action(PetAPI.play,  '🎮 Played','🎾', playBtn));
 
-  // Friends
+  if (adoptForm) {
+    adoptForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = petNameInput.value.trim();
+      const type = petTypeInput.value;
+      try {
+        const res = await fetch('/api/pet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ownerId: OWNER_ID, name, type })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          petId = data._id;
+          render(data, 'Pet adopted');
+          M.toast({ html: `Adopted ${data.name} 🐾` });
+        } else {
+          M.toast({ html: data.error || 'Could not adopt pet' });
+        }
+      } catch (err) {
+        M.toast({ html: 'Failed to adopt pet.' });
+      }
+    });
+  }
+
+  if (releaseBtn) {
+    releaseBtn.addEventListener('click', async () => {
+      if (!petId) return M.toast({ html: 'No pet to release.' });
+      if (!confirm('Are you sure you want to release your pet?')) return;
+      try {
+        const res = await fetch(`/api/pet/by-owner/${OWNER_ID}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok) {
+          petId = null;
+          render({ name: 'No Pet', type: '', mood: 0, hunger: 0, thirst: 0 }, 'Pet released');
+          M.toast({ html: 'Pet released successfully.' });
+        } else {
+          M.toast({ html: data.error || 'Could not release pet' });
+        }
+      } catch (err) {
+        M.toast({ html: 'Failed to release pet.' });
+      }
+    });
+  }
+
   inviteBtn.addEventListener('click', async () => {
+    if (!petId) return M.toast({ html: 'No pet to share yet.' });
     const url = `${location.origin}/pet.html?petId=${encodeURIComponent(petId)}`;
     try {
       await navigator.clipboard.writeText(url);
