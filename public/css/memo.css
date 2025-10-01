@@ -1,0 +1,200 @@
+body {
+  background: none;
+}
+
+body.container { 
+  max-width: 1080px; 
+}
+
+.mailbox-title {
+  margin-top: 0;
+}
+
+.list-toolbar { 
+  display:flex; 
+  justify-content:space-between; 
+  align-items:center; 
+  margin:6px 0 10px; 
+}
+.two-col { 
+  display:flex; 
+  gap:16px; 
+}
+.left-col { 
+  width: 46%; 
+}
+.right-col { 
+  width: 54%; 
+  border-left: 1px solid #eee; 
+  padding-left: 16px; 
+  min-height: 360px; 
+}
+
+.memo-row { 
+  display:flex; 
+  align-items:center; 
+  justify-content:space-between; 
+  padding:12px 0; 
+  border-bottom:1px solid #eee; 
+  cursor:pointer; 
+}
+.memo-row .left { 
+  flex: 1 1 auto; 
+  min-width: 0; 
+}
+.memo-row .subject { 
+  font-weight:600; 
+}
+.memo-row .preview { 
+  color:#777; 
+}
+
+.badges { 
+  display:flex; 
+  gap:8px; 
+  margin-top:6px; 
+}
+.selected { 
+  background:#fafafa; 
+  border-left:3px solid #26a69a; 
+  padding-left:7px; 
+}
+.muted { 
+  color:#9e9e9e; 
+}
+
+.attachment-icons { 
+  display:flex; gap:8px; 
+  margin-top:8px; 
+  flex-wrap:wrap; 
+}
+.attachment-chip { 
+  display:inline-flex; 
+  align-items:center; 
+  gap:6px; border:1px solid #ddd; 
+  border-radius:16px; 
+  padding:4px 10px; 
+  font-size:0.9rem; 
+}
+
+.two-col .left-col {
+  display: flex;
+  flex-direction: column;
+}
+
+#list {
+  min-height: 420px;
+}
+
+ul.pagination {
+  margin-top: 14px;
+}
+
+.pagination li.is-disabled a {
+  color: #bdbdbd !important;
+  pointer-events: none;
+}
+
+
+/**/
+.room-card {
+  height: calc(100vh - 140px);  /* 扣掉 nav bar 和上下邊距 */
+  overflow: hidden;             /* 不讓整頁出 scrollbar */
+  display: flex;
+  flex-direction: column;
+}
+
+.two-col {
+  overflow: hidden;
+}
+
+.left-col, .right-col {
+  overflow-y: auto;   /* 只在左右欄內部滾動 */
+}
+
+.two-col {
+  display: flex;
+  gap: 16px;          /* 左右間距 */
+}
+
+.left-col {
+  flex: 0 0 51%;
+}
+
+.right-col {
+  flex: 1;
+}
+
+/*attachment button*/
+.att-palette { display:flex; gap:8px; flex-wrap:wrap; }
+.att-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  border:1px solid #ddd; border-radius:14px; padding:6px 10px;
+  background:#fff; cursor:pointer; font-size:.95rem;
+}
+.att-btn .emoji { font-size:1.1rem; }
+.att-btn.is-active { border-color:#26a69a; background:#e0f2f1; }
+.qty-wrap { display:inline-flex; align-items:center; gap:6px; margin-top:10px; }
+.qty-btn { width:32px; height:32px; border:1px solid #ddd; background:#fff; border-radius:8px; }
+#attQty { width:72px; text-align:center; }
+.muted { color:#9e9e9e; }
+
+.att-btn[data-type="heart"].is-active,
+.att-btn[data-type="burger"].is-active,
+.att-btn[data-type="drink"].is-active { box-shadow: 0 0 0 2px #26a69a40; }
+
+#attChooser .att-btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* --- Monster Cat follow eyes --- */
+.pet-follow { 
+  margin-top: 0px; 
+  display: grid; 
+  place-items: center; 
+}
+
+.pet-wrap {
+  position: relative;
+  width: min(180px, 70%);           /* 自適應寬度 */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.cat-follow { width: 100%; display: block; }
+
+/* 眼睛中心（用百分比鎖定位置，方便不同解析度） */
+.eye {
+  --eye-size: 32px;                 /* 眼白區可碰撞的範圍（只是定位用） */
+  --pupil-size: 14px;               /* 瞳孔大小 */
+  --pupil-move: 10px;                /* 瞳孔最大位移半徑（像素） */
+
+  position: absolute;
+  width: var(--eye-size);
+  height: var(--eye-size);
+  transform: translate(-50%, -50%); /* 以中心點對齊 */
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 兩眼的基準位置（依圖片調整百分比即可） */
+.eye-left  { left: 30%; top: 70%; } /* ← 微調這兩行就能完美對位 */
+.eye-right { left: 70%; top: 65%; }
+
+/* 瞳孔 */
+.pupil {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: var(--pupil-size);
+  height: var(--pupil-size);
+  border-radius: 50%;
+  background: #1a1a1a;
+  box-shadow: 0 0 0 2px #00000020 inset;
+  transform: translate(-50%, -50%);
+  transition: transform 60ms linear;   /* 平滑一點 */
+}
+
+/* 盡量尊重使用者的減少動效設定 */
+@media (prefers-reduced-motion: reduce) {
+  .pupil { transition: none; }
+}

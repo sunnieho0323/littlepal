@@ -16,8 +16,20 @@ export function toast(msg) {
 
 // Token / user information（Owen login page localStorage）
 export function getUser() {
-  try { return JSON.parse(localStorage.getItem('user') || 'null'); }
-  catch { return null; }
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (user) return user;
+    const raw = localStorage.getItem('lp_user');
+    if (!raw) return null;
+
+    const obj = (raw[0] === '{') ? JSON.parse(raw) : { email: raw };
+    return {
+      id: obj.id || obj._id || undefined,
+      email: obj.email || '',
+      role: obj.role || 'user',
+      avatarUrl: obj.avatarUrl
+    };
+  } catch { return null; }
 }
 export function getToken() { return localStorage.getItem('token'); }
 export function setAuth({ user, token }) {
@@ -27,11 +39,12 @@ export function setAuth({ user, token }) {
 export function logout() {
   localStorage.removeItem('user');
   localStorage.removeItem('token');
-  location.href = '/login.html'; // Owen after logout go to login page
+  localStorage.removeItem('lp_user');
+  location.replace('/login.html'); // Owen after logout go to login page
 }
 
 // index avatar show user info
-(function initAvatar() {
+function renderAvatar() {
   const user = getUser();
   const avatarImg = document.getElementById('avatar-img');
   const avatarText = document.getElementById('avatar-text');
@@ -40,18 +53,19 @@ export function logout() {
   if (logoutBtn) logoutBtn.addEventListener('click', logout);
 
   if (!user) {
-    // not login -> go to login page (or stay here for Owen testing)
-    avatarText && (avatarText.textContent = 'Guest');
+    if (avatarText) avatarText.textContent = 'Guest';
     return;
   }
 
-  // if user.avatar show image, else show initial
-  if (user.avatarUrl) {
-    avatarImg.src = user.avatarUrl;
-    avatarText.textContent = user.name || user.email;
-  } else {
-    avatarImg.style.display = 'none';
-    const initial = (user.name || user.email || '?').charAt(0).toUpperCase();
-    avatarText.textContent = initial + ' · ' + (user.name || user.email);
+  const fallbackUrl = '/img/monster_cat.png';
+  const url = user.avatarUrl || fallbackUrl;
+  if (avatarImg) {
+    avatarImg.style.display = '';
+    avatarImg.src = url;
   }
-})();
+  if (avatarText) avatarText.textContent = user.name || user.email;
+}
+
+// Render on DOM ready and also when header partial has been injected
+document.addEventListener('DOMContentLoaded', renderAvatar);
+document.addEventListener('site-header:ready', renderAvatar);

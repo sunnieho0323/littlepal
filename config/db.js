@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 async function connectDB() {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URL, {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
       dbName: process.env.MONGO_DB || 'littlepal',
     });
     console.log(`🗄️ MongoDB connected: ${conn.connection.host}/${conn.connection.name}`);

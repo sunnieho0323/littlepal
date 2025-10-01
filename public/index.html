@@ -15,6 +15,16 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/css/app.css" />
+    <script>
+      (function () {
+        // Protect page: require login via localStorage key set by login.js
+        try {
+          if (!localStorage.getItem('lp_user')) {
+            location.href = '/login.html';
+          }
+        } catch (_) {}
+      })();
+    </script>
   </head>
   <body class="littlepal-room">
     <!-- Top Nav -->
@@ -126,7 +136,6 @@
     <script>
       const socket = io(); // connect to server
     </script>
-    
     <script>
       (async function () {
         const petBtn = document.querySelector('[data-testid="nav-pet"]');
@@ -154,6 +163,5 @@
         }
       })();
     </script>
-
   </body>
 </html>

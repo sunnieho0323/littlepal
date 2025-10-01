@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Little Pal — Sign up</title>
+  <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+  <main class="wrap">
+    <section class="card" role="form" aria-labelledby="title">
+      <div class="brand">
+        <h1 id="title">Create account</h1>
+        <p class="subtitle">Sign up to start playing with your pet</p>
+      </div>
+
+      <div id="error" class="alert" aria-live="polite" hidden></div>
+
+      <form id="signupForm" novalidate>
+        <label class="field">
+          <span>Email</span>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </label>
+
+        <label class="field">
+          <span>Password</span>
+          <div class="password">
+            <input id="password" name="password" type="password" autocomplete="new-password" placeholder="••••••••" minlength="8" required>
+            <button type="button" id="togglePw" aria-label="Show password">👁</button>
+          </div>
+        </label>
+
+        <button class="primary" type="submit">Create account</button>
+      </form>
+
+      <p class="meta">
+        Already have an account?
+        <a class="link" href="/login.html">Sign in</a>
+      </p>
+    </section>
+  </main>
+
+  <script src="/js/signup.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Your Monster Cat - LittlePal</title>
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Google Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- App styles -->
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/chat.css">
+    <script>
+      (function () {
+        try { if (!localStorage.getItem('lp_user')) location.href = '/login.html'; } catch(_) {}
+      })();
+    </script>
+</head>
+<body class="littlepal-room">
+    <!-- Shared Header -->
+    <div id="site-header"></div>
+
+    <!-- Back to Dashboard (unified) -->
+    <div class="container" style="margin-top: 16px;">
+      <a href="/" class="back-link"><i class="material-icons" style="vertical-align: middle">arrow_back</i> Back to Dashboard</a>
+    </div>
+    
+    <div class="game-container">
+        <div class="cat-room">
+            <div class="cat-area">
+                <img 
+                    src="/img/monster_cat.png" 
+                    alt="Monster Cat" 
+                    class="cat-image"
+                    id="catImage"
+                >
+            </div>
+            
+            <div class="conversation-area" id="conversationArea">
+                <div class="speech-bubble cat">
+                    <p class="speech-text">
+                        👋 Oh great, another human who needs emotional support. Fine, I'll be your sassy therapy cat today. What's bothering you? 😏🐱
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input 
+            type="text" 
+            class="chat-input" 
+            id="messageInput" 
+            placeholder="Share your feelings with me..."
+            maxlength="500"
+        >
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            Send
+        </button>
+        <button class="clear-btn" id="clearBtn" onclick="clearChat()">
+            Clear Chat
+        </button>
+    </div>
+
+    <!-- Include Socket.IO client -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- Common app (avatar/user + logout) -->
+    <script type="module" src="/js/common/app.js"></script>
+    <script type="module" src="/js/common/header.js"></script>
+    <script type="module" src="/js/common/socket.client.js"></script>
+    <!-- Include chat scripts -->
+    <script src="/js/chat/chat.api.js"></script>
+    <script src="/js/chat/chat.page.js"></script>
+    <script>
+      // Initialize Materialize dropdown on this page
+      document.addEventListener('DOMContentLoaded', function () {
+        const elems = document.querySelectorAll('.dropdown-trigger');
+        if (window.M?.Dropdown) {
+          M.Dropdown.init(elems, { constrainWidth: false, coverTrigger: false, alignment: 'right' });
+        }
+      });
+    </script>
+</body>
+</html>

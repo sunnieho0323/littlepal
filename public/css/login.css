@@ -1,0 +1,96 @@
+:root {
+  --bg: linear-gradient(180deg, #fff8e1 0%, #ffe0b2 100%);  /* Background from light cream to light orange */
+  --card: #ffffffaa;         /* Card white */
+  --muted: #6b7280;        /* Gray text */
+  --text: #1f2937;         /* Dark gray body text */
+  --accent: #11dfee;       /* Button green */
+  --accent-press: #16a34a; /* Button pressed green */
+  --border: #e5e7eb;       /* Card border light gray */
+  --danger: #ef4444;       /* Error message red */
+}
+
+*{box-sizing:border-box}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, Segoe UI, Arial;
+}
+
+.wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}
+.card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px 26px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.brand{text-align:center;margin-bottom:18px}
+.brand h1{margin:.2rem 0 .25rem;font-size:1.35rem}
+.subtitle{margin:0;color:var(--muted);font-size:.9rem}
+.field{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.field span{font-size:.9rem;color:var(--muted)}
+
+input[type="email"], input[type="password"] {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: #ffffff;     /* White background */
+  color: #000000;          /* Black text */
+  border-radius: 12px;
+  outline: none;
+}
+
+input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+.password{display:flex;gap:6px;align-items:center}
+.password input{flex:1}
+
+.password button {
+  border: 1px solid #d1d5db;   /* Light gray border */
+  background: #ffffff;         /* White background */
+  color: #374151;              /* Dark gray text/icon */
+  padding: 0 12px;
+  height: 42px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.password button:hover {
+  background: #f3f4f6;         /* Light gray background on hover */
+  color: #111827;              /* Darker gray */
+}
+
+.password button:active {
+  transform: scale(.98);
+}
+
+.row{display:flex;justify-content:space-between;align-items:center;margin:6px 0 12px}
+.checkbox{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.9rem}
+.link{color:#93c5fd;text-decoration:none}
+.link[aria-disabled="true"]{opacity:.7;pointer-events:none}
+
+.primary {
+  width: 100%;
+  margin-top: 6px;
+  background: #26a69a;      /* Materialize default green */
+  color: #fff;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+}
+.primary:hover {
+  background: #2bbbad;      /* Hover color */
+}
+
+.alert {
+  background: #ffffff;        /* White background */
+  color: #000000;             /* Black text */
+  border-left: 4px solid var(--danger); /* Red border, keeping original variable */
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 6px 0;
+  font-size: .92rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow to make it more visible */
+}
+
+.meta{color:var(--muted);text-align:center;margin-top:14px}
+@media (max-width:420px){ .card{padding:24px 18px} }

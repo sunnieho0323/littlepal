@@ -1,3 +1,4 @@
+// app/routes/auth.routes.js
 const router = require('express').Router();
 const C = require('../controllers/AuthController');
 
@@ -5,5 +6,6 @@ const C = require('../controllers/AuthController');
 router.post('/register', C.register);
 router.post('/login', C.login);
 router.get('/me', C.me);
+router.get('/users', C.searchUsers);
 
 module.exports = router;
